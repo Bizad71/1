@@ -1,96 +1,91 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نمایش کلمات فایل Word</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لغات روزانه</title>
 
-    <style>
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:tahoma;
-        }
+<style>
+body{
+    font-family:tahoma;
+    background:#f3f3f3;
+    margin:0;
+    padding:20px;
+}
+h1{
+    text-align:center;
+}
+#words{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:15px;
+}
 
-        body{
-            background:#f2f2f2;
-            padding:30px;
-        }
+.card{
+    background:white;
+    border-radius:10px;
+    padding:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
 
-        .container{
-            max-width:900px;
-            margin:auto;
-            background:#fff;
-            border-radius:12px;
-            padding:20px;
-            box-shadow:0 5px 20px rgba(0,0,0,.15);
-        }
+.word{
+    font-size:22px;
+    font-weight:bold;
+    color:#1565c0;
+}
 
-        h2{
-            text-align:center;
-            margin-bottom:20px;
-        }
+.meaning{
+    margin-top:10px;
+    color:#444;
+}
 
-        input[type=file],
-        input[type=text]{
-            width:100%;
-            padding:12px;
-            margin:10px 0;
-            border:1px solid #ccc;
-            border-radius:8px;
-            font-size:16px;
-        }
-
-        #count{
-            margin:15px 0;
-            font-weight:bold;
-        }
-
-        #words{
-            display:flex;
-            flex-wrap:wrap;
-            gap:10px;
-        }
-
-        .word{
-            background:#1976d2;
-            color:white;
-            padding:8px 12px;
-            border-radius:8px;
-            cursor:pointer;
-            transition:.2s;
-        }
-
-        .word:hover{
-            background:#0d47a1;
-            transform:scale(1.05);
-        }
-    </style>
-
+.example{
+    margin-top:10px;
+    color:#666;
+    font-style:italic;
+}
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<h1>لغات امروز</h1>
 
-    <h2>نمایش کلمات فایل Word</h2>
+<div id="words"></div>
 
-    <input id="file" type="file" accept=".docx">
-
-    <input id="search" type="text" placeholder="جستجوی کلمه...">
-
-    <div id="count">تعداد کلمات: 0</div>
-
-    <div id="words"></div>
-
-</div>
-
-<!-- کتابخانه خواندن فایل Word -->
-<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
-
-<!-- فایل جاوااسکریپت -->
 <script src="word.js"></script>
+
+<script>
+
+const PER_DAY = 20;
+
+// شماره روز از ابتدای سال
+const today = new Date();
+const start = new Date(today.getFullYear(),0,0);
+const day = Math.floor((today-start)/86400000);
+
+// انتخاب ۲۰ کلمه
+const startIndex = ((day-1)*PER_DAY) % WORDS.length;
+
+const list=[];
+
+for(let i=0;i<PER_DAY;i++){
+    list.push(WORDS[(startIndex+i)%WORDS.length]);
+}
+
+const box=document.getElementById("words");
+
+list.forEach(item=>{
+    box.innerHTML+=`
+    <div class="card">
+        <div class="word">${item.word}</div>
+        <div class="meaning">${item.meaning}</div>
+        <div class="example">${item.example}</div>
+    </div>
+    `;
+});
+
+</script>
 
 </body>
 </html>
