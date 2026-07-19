@@ -298,7 +298,7 @@ example:"I know this place."
 word:"think",
 meaning:"فکر کردن",
 example:"I think it is good."
-}
+},
 
 {
 word:"learn",
@@ -1499,7 +1499,7 @@ example:"My name is Behzad."
 word:"number",
 meaning:"شماره / عدد",
 example:"What is your phone number?"
-}
+},
 
 
 {
@@ -2394,7 +2394,7 @@ example:"I repair medical equipment."
 word:"fix",
 meaning:"درست کردن",
 example:"I can fix this problem."
-}
+},
 
 {
 word:"health",
@@ -3576,7 +3576,7 @@ example:"My package arrived today."
 word:"product",
 meaning:"محصول",
 example:"This product is useful."
-}
+},
 
 {
 word:"time",
@@ -3870,7 +3870,7 @@ example:"Sometimes I walk to work."
 word:"forever",
 meaning:"برای همیشه",
 example:"I will remember this forever."
-}
+},
 
 {
 word:"number",
@@ -4164,7 +4164,7 @@ example:"I have a few questions."
 word:"enough",
 meaning:"کافی",
 example:"I have enough money."
-}
+},
 
 {
 word:"food",
@@ -5047,7 +5047,7 @@ example:"Keep your sentences simple."
 word:"fluent",
 meaning:"روان",
 example:"She speaks fluent English."
-}
+},
 {
 word:"decision",
 meaning:"تصمیم",
@@ -5340,7 +5340,7 @@ example:"Check the information."
 word:"fund",
 meaning:"تأمین مالی کردن / سرمایه",
 example:"They fund medical research."
-}
+},
 
 {
 word:"important",
@@ -5634,7 +5634,7 @@ example:"He became rich."
 word:"poor",
 meaning:"فقیر",
 example:"Many people are poor."
-}
+},
 
 {
 word:"ability",
@@ -5928,7 +5928,7 @@ example:"People grow through experience."
 word:"become",
 meaning:"شدن",
 example:"I want to become successful."
-}
+},
 
 
 ];
