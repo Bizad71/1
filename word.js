@@ -2688,7 +2688,7 @@ example:"I like spicy food."
 word:"fresh",
 meaning:"تازه",
 example:"The fruit is fresh."
-}
+},
 
 {
 word:"house",
