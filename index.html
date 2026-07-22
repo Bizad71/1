@@ -1,1 +1,257 @@
-<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><link rel='stylesheet' href='style.css'></head><body><div class='row'><span>I want </span><span id='art'>a</span><div class='picker' id='picker'></div></div><script src='script.js'></script></body></html>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>فلش کارت های من</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📚 فلش کارت های من</h1>
+
+<input
+id="searchInput"
+type="text"
+placeholder="🔍 جستجوی فارسی یا انگلیسی..."
+class="searchBox"
+>
+
+<div class="creator">
+
+<input
+id="faWord"
+type="text"
+placeholder="کلمه فارسی را وارد کنید..."
+>
+
+<select id="category">
+
+<option value="🏠 خانه">🏠 خانه</option>
+<option value="🍔 غذا و نوشیدنی">🍔 غذا و نوشیدنی</option>
+<option value="🏥 بیمارستان">🏥 بیمارستان</option>
+<option value="🚗 حمل و نقل">🚗 حمل و نقل</option>
+<option value="👨‍👩‍👧 خانواده">👨‍👩‍👧 خانواده</option>
+<option value="👕 لباس">👕 لباس</option>
+<option value="🏫 مدرسه">🏫 مدرسه</option>
+<option value="💼 شغل">💼 شغل</option>
+<option value="🌍 سفر">🌍 سفر</option>
+<option value="🛒 خرید">🛒 خرید</option>
+<option value="🐶 حیوانات">🐶 حیوانات</option>
+<option value="🌳 طبیعت">🌳 طبیعت</option>
+<option value="❤️ بدن">❤️ بدن</option>
+<option value="⚡ افعال">⚡ افعال</option>
+<option value="⭐ سایر">⭐ سایر</option>
+
+</select>
+
+<button id="createBtn">
+ساخت فلش کارت
+</button>
+
+</div>
+
+<div id="loading" class="loading">
+در حال ساخت فلش کارت...
+</div>
+
+<div id="cards" class="cards"></div>
+
+<button id="myWordsBtn" class="myWordsBtn">
+📚 کلمات من
+</button>
+
+<button id="backBtn" class="myWordsBtn" style="display:none;">
+⬅ بازگشت
+</button>
+
+<select id="filterCategory" style="display:none;">
+
+<option value="همه">📚 همه دسته‌ها</option>
+
+<option value="🏠 خانه">🏠 خانه</option>
+<option value="🍔 غذا و نوشیدنی">🍔 غذا و نوشیدنی</option>
+<option value="🏥 بیمارستان">🏥 بیمارستان</option>
+<option value="🚗 حمل و نقل">🚗 حمل و نقل</option>
+<option value="👨‍👩‍👧 خانواده">👨‍👩‍👧 خانواده</option>
+<option value="👕 لباس">👕 لباس</option>
+<option value="🏫 مدرسه">🏫 مدرسه</option>
+<option value="💼 شغل">💼 شغل</option>
+<option value="🌍 سفر">🌍 سفر</option>
+<option value="🛒 خرید">🛒 خرید</option>
+<option value="🐶 حیوانات">🐶 حیوانات</option>
+<option value="🌳 طبیعت">🌳 طبیعت</option>
+<option value="❤️ بدن">❤️ بدن</option>
+<option value="⚡ افعال">⚡ افعال</option>
+<option value="⭐ سایر">⭐ سایر</option>
+
+</select>
+
+<div id="myWords" class="cards" style="display:none;"></div>
+
+</div>
+
+<template id="cardTemplate">
+
+<div class="card">
+
+<div class="front">
+
+<h2 class="en"></h2>
+
+</div>
+
+<div class="back">
+
+<h3 class="fa"></h3>
+
+<p class="category"></p>
+
+<div class="buttons">
+
+<button class="ok">✅</button>
+
+<button class="delete">❌</button>
+
+<button class="speak">🔊</button>
+
+</div>
+
+</div>
+
+</div>
+
+</template>
+<button id="gameBtn" class="myWordsBtn">
+🎮 بازی کلمات
+</button>
+
+<button id="crosswordBtn" class="myWordsBtn">
+🧩 جدول کلمات
+</button>
+
+
+<div id="crosswordGame">
+
+<h2>🧩 جدول کلمات</h2>
+
+<div id="crosswordGrid"></div>
+
+<div id="crosswordClues"></div>
+
+<button id="closeCrossword">
+خروج
+</button>
+
+</div>
+  
+<div id="wordGame" class="wordGame">
+
+<h2 id="gameTarget"></h2>
+
+<div id="fallingArea"></div>
+
+<h3>
+امتیاز:
+<span id="gameScore">0</span>
+</h3>
+<h3>
+🏆 رکورد:
+<span id="bestScore">0</span>
+</h3>
+<button id="closeGame">
+خروج از بازی
+</button>
+
+</div>
+<button id="quizBtn" class="quizBtn">
+📝 آزمون
+</button>
+
+<div id="quizModal" class="quizModal">
+
+<div class="quizBox">
+
+<div id="quizContent">
+
+<div id="quizStart">
+
+<h2>📝 آزمون فلش کارت</h2>
+
+<p>
+در این آزمون ۱۰ سؤال به صورت تصادفی از کلمات شما پرسیده می‌شود.
+</p>
+
+<p>
+حداقل باید ۱۰ فلش کارت داشته باشید.
+</p>
+
+<button id="startQuiz">
+شروع آزمون
+</button>
+
+</div>
+
+<div id="quizGame" style="display:none;">
+
+<div class="quizHeader">
+
+<span id="questionNumber">
+سؤال 1 از 10
+</span>
+
+<div class="progress">
+
+<div id="progressBar"></div>
+
+</div>
+
+</div>
+
+<h2 id="questionText"></h2>
+
+<div id="answers">
+
+<button class="answerBtn"></button>
+<button class="answerBtn"></button>
+<button class="answerBtn"></button>
+<button class="answerBtn"></button>
+
+</div>
+
+</div>
+
+<div id="quizResult" style="display:none;">
+
+<h2>
+🎉 آزمون تمام شد
+</h2>
+
+<h3 id="scoreText"></h3>
+
+<p id="detailText"></p>
+
+<button id="finishQuiz">
+پایان آزمون
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+
+  </html>
