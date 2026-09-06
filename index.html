@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -52,8 +53,6 @@ body:before{
     mask-image:linear-gradient(to bottom,black,transparent);
 }
 
-/* HEADER */
-
 .header{
     position:sticky;
     top:0;
@@ -98,8 +97,6 @@ body:before{
     color:var(--green);
 }
 
-/* MAIN */
-
 main{
     width:min(760px,100%);
     margin:auto;
@@ -128,8 +125,6 @@ main{
     font-size:13px;
     margin:10px 0 0;
 }
-
-/* SESSION BUTTONS */
 
 .sessions{
     display:grid;
@@ -221,8 +216,6 @@ main{
     transition:.3s;
 }
 
-/* WORKOUT */
-
 .hidden{
     display:none!important;
 }
@@ -289,8 +282,6 @@ main{
     box-shadow:0 0 14px var(--blue);
     transition:.35s;
 }
-
-/* EXERCISE */
 
 .exercise{
     position:relative;
@@ -379,8 +370,6 @@ main{
     color:var(--cyan);
 }
 
-/* SETS */
-
 .set-title{
     margin-top:17px;
     color:#668198;
@@ -454,8 +443,6 @@ main{
     display:block;
 }
 
-/* FINISH */
-
 .finish{
     display:none;
     margin-top:20px;
@@ -499,8 +486,14 @@ main{
 }
 
 @keyframes pop{
-    from{transform:scale(.96);opacity:0}
-    to{transform:scale(1);opacity:1}
+    from{
+        transform:scale(.96);
+        opacity:0;
+    }
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
 }
 
 @media(min-width:600px){
@@ -526,59 +519,150 @@ main{
 
 <main>
 
-    <!-- HOME -->
-    <section id="home">
+<section id="home">
 
-        <div class="hero">
-            <h1>برنامه <span>تمرینی</span></h1>
-            <p>تمرین کن • ست‌ها را ثبت کن • پیشرفتت را ببین</p>
+    <div class="hero">
+        <h1>برنامه <span>تمرینی</span></h1>
+        <p>تمرین کن • ست‌ها را ثبت کن • پیشرفتت را ببین</p>
+    </div>
+
+    <div class="sessions" id="sessionButtons"></div>
+
+</section>
+
+
+<section id="workout" class="hidden">
+
+    <button class="back" onclick="goHome()">
+        ← بازگشت به جلسات
+    </button>
+
+    <div class="workout-head">
+
+        <h2 id="workoutTitle"></h2>
+
+        <p id="workoutSubtitle"></p>
+
+        <div class="overall">
+
+            <div class="overall-line">
+                <span>پیشرفت جلسه</span>
+                <strong id="overallText">0%</strong>
+            </div>
+
+            <div class="overall-bar">
+                <div id="overallBar"></div>
+            </div>
+
         </div>
 
-        <div class="sessions" id="sessionButtons"></div>
+    </div>
 
-    </section>
+    <div id="exerciseList"></div>
 
+    <div class="finish" id="finish">
 
-    <!-- WORKOUT -->
-    <section id="workout" class="hidden">
+        <div class="finish-icon">✓</div>
 
-        <button class="back" onclick="goHome()">
-            ← بازگشت به جلسات
+        <h3>جلسه کامل شد</h3>
+
+        <p>
+            تمام حرکات این جلسه انجام شد.
+        </p>
+
+        <button class="reset" onclick="resetCurrentSession()">
+            شروع مجدد جلسه
         </button>
 
-        <div class="workout-head">
-            <h2 id="workoutTitle"></h2>
-            <p id="workoutSubtitle"></p>
+    </div>
 
-            <div class="overall">
-                <div class="overall-line">
-                    <span>پیشرفت جلسه</span>
-                    <strong id="overallText">0%</strong>
-                </div>
-
-                <div class="overall-bar">
-                    <div id="overallBar"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="exerciseList"></div>
-
-        <div class="finish" id="finish">
-            <div class="finish-icon">✓</div>
-            <h3>جلسه کامل شد</h3>
-            <p>تمام حرکات این جلسه انجام شد.</p>
-            <button class="reset" onclick="resetCurrentSession()">
-                شروع مجدد جلسه
-            </button>
-        </div>
-
-    </section>
+</section>
 
 </main>
 
 
 <script>
+
+/* =========================================================
+   GIF SOURCES
+   فقط منابع GIF اصلاح شده‌اند.
+   منطق برنامه تغییری نکرده است.
+========================================================= */
+
+const GIF = {
+
+    /* SESSION 1 */
+
+    bench:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/71-Dumbbell-bench-press.gif",
+
+    incline:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/Incline-Dumbell-Press.gif",
+
+    fly:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/butterfly.gif",
+
+    pushup:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/Push-Up.gif",
+
+    shoulder:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/dumbbell-overhead-press.gif",
+
+    lateral:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/Side%20lateral%20raise.gif",
+
+    triceps:
+    "https://fitnessprogramer.com/wp-content/uploads/2021/02/Triceps-Pushdown.gif",
+
+
+    /* SESSION 2 */
+
+    squat:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/squat.gif",
+
+    legpress:
+    "https://fitnessprogramer.com/wp-content/uploads/2021/02/Leg-Press.gif",
+
+    legcurl:
+    "https://fitnessprogramer.com/wp-content/uploads/2021/02/Lying-Leg-Curl.gif",
+
+    legextension:
+    "https://fitnessprogramer.com/wp-content/uploads/2021/02/Leg-Extension.gif",
+
+    calf:
+    "https://fitnessprogramer.com/wp-content/uploads/2021/02/Standing-Calf-Raise.gif",
+
+    crunch:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/bicycyle%20crunches.gif",
+
+    plank:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/plank.gif",
+
+
+    /* SESSION 3 */
+
+    lat:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/pull%20down.gif",
+
+    row:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/sitting%20cabel%20row.gif",
+
+    pullup:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/wide%20grip%20pull%20ups.gif",
+
+    facepull:
+    "https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif",
+
+    barbellcurl:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/standing-barbell-curl.gif",
+
+    dumbbellcurl:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/bicep%20curl.gif",
+
+    hammer:
+    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/Hammer.gif"
+};
+
 
 /* =========================================================
    PROGRAM
@@ -590,6 +674,7 @@ const workouts = {
         title:"جلسه اول",
         subtitle:"سینه + سرشانه + پشت‌بازو",
         icon:"◈",
+
         exercises:[
 
             {
@@ -598,7 +683,7 @@ const workouts = {
                 reps:"8–10",
                 target:"سینه",
                 equipment:"هالتر + نیمکت",
-                gif:"https://www.ffocus.me/exercise/barbell-bench-press"
+                gif:GIF.bench
             },
 
             {
@@ -607,7 +692,7 @@ const workouts = {
                 reps:"8–12",
                 target:"بالاسینه",
                 equipment:"دمبل + نیمکت شیب‌دار",
-                gif:"https://www.ffocus.me/exercise/incline-dumbbell-press"
+                gif:GIF.incline
             },
 
             {
@@ -616,7 +701,7 @@ const workouts = {
                 reps:"10–12",
                 target:"سینه",
                 equipment:"دمبل + نیمکت",
-                gif:"https://commons.wikimedia.org/wiki/Special:Redirect/file/DumbbellFlye.gif"
+                gif:GIF.fly
             },
 
             {
@@ -625,7 +710,7 @@ const workouts = {
                 reps:"نزدیک ناتوانی",
                 target:"سینه",
                 equipment:"وزن بدن",
-                gif:"https://www.ffocus.me/exercise/push-up"
+                gif:GIF.pushup
             },
 
             {
@@ -634,7 +719,7 @@ const workouts = {
                 reps:"8–10",
                 target:"سرشانه",
                 equipment:"دمبل + نیمکت",
-                gif:"https://iconscout.com/lottie-animation/seated-dumbbell-shoulder-press-animation"
+                gif:GIF.shoulder
             },
 
             {
@@ -643,7 +728,7 @@ const workouts = {
                 reps:"12–15",
                 target:"سرشانه میانی",
                 equipment:"دمبل",
-                gif:"https://makeagif.com/gif/dumbbell-lateral-raise-exercise-X3_AZJ"
+                gif:GIF.lateral
             },
 
             {
@@ -652,7 +737,7 @@ const workouts = {
                 reps:"10–12",
                 target:"پشت‌بازو",
                 equipment:"سیم‌کش + طناب",
-                gif:"https://www.ffocus.me/exercise/triceps-pushdown"
+                gif:GIF.triceps
             }
 
         ]
@@ -663,6 +748,7 @@ const workouts = {
         title:"جلسه دوم",
         subtitle:"پا + شکم",
         icon:"◉",
+
         exercises:[
 
             {
@@ -671,7 +757,7 @@ const workouts = {
                 reps:"8–10",
                 target:"ران + باسن",
                 equipment:"رک + هالتر",
-                gif:"https://gymbeam.com/blog/wp-content/uploads/2024/03/Zadny-drep-s-osou.gif"
+                gif:GIF.squat
             },
 
             {
@@ -680,7 +766,7 @@ const workouts = {
                 reps:"10–12",
                 target:"چهارسر ران",
                 equipment:"دستگاه پرس پا",
-                gif:"https://tenor.com/view/leg-press-exercise-active-workout-gym-gif-14796870"
+                gif:GIF.legpress
             },
 
             {
@@ -689,7 +775,7 @@ const workouts = {
                 reps:"10–12",
                 target:"همسترینگ",
                 equipment:"دستگاه پشت پا",
-                gif:"https://www.ffocus.me/exercise/lying-leg-curl"
+                gif:GIF.legcurl
             },
 
             {
@@ -698,7 +784,7 @@ const workouts = {
                 reps:"12–15",
                 target:"چهارسر ران",
                 equipment:"دستگاه جلو پا",
-                gif:"https://www.ffocus.me/exercise/leg-extension"
+                gif:GIF.legextension
             },
 
             {
@@ -707,7 +793,7 @@ const workouts = {
                 reps:"12–15",
                 target:"ساق",
                 equipment:"دستگاه ساق",
-                gif:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Standing-barbell-calf-raise-2.gif"
+                gif:GIF.calf
             },
 
             {
@@ -716,7 +802,7 @@ const workouts = {
                 reps:"15–20",
                 target:"شکم",
                 equipment:"زمین / دستگاه",
-                gif:"https://www.ffocus.me/exercise/crunch"
+                gif:GIF.crunch
             },
 
             {
@@ -725,7 +811,7 @@ const workouts = {
                 reps:"30–60 ثانیه",
                 target:"Core",
                 equipment:"وزن بدن",
-                gif:"https://www.ffocus.me/exercise/plank"
+                gif:GIF.plank
             }
 
         ]
@@ -736,6 +822,7 @@ const workouts = {
         title:"جلسه سوم",
         subtitle:"پشت + جلو بازو",
         icon:"◇",
+
         exercises:[
 
             {
@@ -744,7 +831,7 @@ const workouts = {
                 reps:"8–12",
                 target:"زیربغل",
                 equipment:"دستگاه لت",
-                gif:"https://www.strengthlog.com/wp-content/uploads/2020/04/lat-pulldown-with-supinated-grip.gif"
+                gif:GIF.lat
             },
 
             {
@@ -753,7 +840,7 @@ const workouts = {
                 reps:"10–12",
                 target:"وسط پشت",
                 equipment:"سیم‌کش",
-                gif:"https://www.ffocus.me/exercise/seated-cable-row"
+                gif:GIF.row
             },
 
             {
@@ -762,7 +849,7 @@ const workouts = {
                 reps:"6–10",
                 target:"زیربغل",
                 equipment:"میله بارفیکس",
-                gif:"https://www.ffocus.me/exercise/pull-up"
+                gif:GIF.pullup
             },
 
             {
@@ -771,7 +858,7 @@ const workouts = {
                 reps:"12–15",
                 target:"پشت سرشانه",
                 equipment:"سیم‌کش + طناب",
-                gif:"https://www.ffocus.me/exercise/face-pull"
+                gif:GIF.facepull
             },
 
             {
@@ -780,7 +867,7 @@ const workouts = {
                 reps:"8–12",
                 target:"جلو بازو",
                 equipment:"هالتر",
-                gif:"https://www.ffocus.me/exercise/barbell-curl"
+                gif:GIF.barbellcurl
             },
 
             {
@@ -789,7 +876,7 @@ const workouts = {
                 reps:"10–12",
                 target:"جلو بازو",
                 equipment:"دمبل",
-                gif:"https://www.ffocus.me/exercise/dumbbell-bicep-curl"
+                gif:GIF.dumbbellcurl
             },
 
             {
@@ -798,7 +885,7 @@ const workouts = {
                 reps:"10–12",
                 target:"جلو بازو + ساعد",
                 equipment:"دمبل",
-                gif:"https://www.ffocus.me/exercise/hammer-curl"
+                gif:GIF.hammer
             }
 
         ]
@@ -815,12 +902,13 @@ let currentSession = 1;
 
 
 /* =========================================================
-   HELPERS
+   LOCAL STORAGE
 ========================================================= */
 
 function getState(session, exerciseIndex){
 
-    const key = `neongym_${session}_${exerciseIndex}`;
+    const key =
+        `neongym_${session}_${exerciseIndex}`;
 
     return JSON.parse(
         localStorage.getItem(key) || "[]"
@@ -828,9 +916,14 @@ function getState(session, exerciseIndex){
 }
 
 
-function saveState(session, exerciseIndex, state){
+function saveState(
+    session,
+    exerciseIndex,
+    state
+){
 
-    const key = `neongym_${session}_${exerciseIndex}`;
+    const key =
+        `neongym_${session}_${exerciseIndex}`;
 
     localStorage.setItem(
         key,
@@ -840,17 +933,13 @@ function saveState(session, exerciseIndex, state){
 
 
 /* =========================================================
-   IMAGE SOURCE
+   GIF IMAGE
 ========================================================= */
 
 function createGifImage(ex){
 
-    const img = document.createElement("img");
-
-    /*
-      بعضی منابع صفحه HTML هستند و نه فایل GIF.
-      ابتدا تلاش می‌کنیم تصویر را از URL مستقیم نمایش دهیم.
-    */
+    const img =
+        document.createElement("img");
 
     img.src = ex.gif;
 
@@ -859,8 +948,9 @@ function createGifImage(ex){
     img.loading = "lazy";
 
     /*
-      اگر منبع تصویر مستقیم نباشد،
-      یک انیمیشن جایگزین تکنولوژیک نمایش داده می‌شود.
+       اگر GIF واقعاً از سرور دریافت نشود،
+       همان ظاهر قبلی حفظ می‌شود ولی یک پیام
+       واضح نمایش داده می‌شود.
     */
 
     img.onerror = function(){
@@ -872,53 +962,47 @@ function createGifImage(ex){
         encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg"
              width="800"
-             height="450"
-             viewBox="0 0 800 450">
+             height="450">
 
-            <rect width="800" height="450" fill="#02070c"/>
+            <rect
+                width="800"
+                height="450"
+                fill="#02070c"/>
 
-            <circle cx="400" cy="220"
-                    r="95"
-                    fill="none"
-                    stroke="#00aaff"
-                    stroke-width="3"
-                    opacity=".7">
+            <circle
+                cx="400"
+                cy="220"
+                r="85"
+                fill="none"
+                stroke="#00aaff"
+                stroke-width="3">
 
-                <animate attributeName="r"
-                         values="70;115;70"
-                         dur="1.8s"
-                         repeatCount="indefinite"/>
+                <animate
+                    attributeName="r"
+                    values="65;105;65"
+                    dur="1.5s"
+                    repeatCount="indefinite"/>
             </circle>
 
-            <circle cx="400" cy="220"
-                    r="55"
-                    fill="none"
-                    stroke="#00eaff"
-                    stroke-width="2">
-
-                <animate attributeName="r"
-                         values="45;80;45"
-                         dur="1.4s"
-                         repeatCount="indefinite"/>
-            </circle>
-
-            <text x="400"
-                  y="215"
-                  text-anchor="middle"
-                  fill="#00d9ff"
-                  font-family="Arial"
-                  font-size="27"
-                  font-weight="bold">
+            <text
+                x="400"
+                y="215"
+                text-anchor="middle"
+                fill="#00d9ff"
+                font-family="Arial"
+                font-size="26"
+                font-weight="bold">
                 ${ex.name}
             </text>
 
-            <text x="400"
-                  y="250"
-                  text-anchor="middle"
-                  fill="#55758d"
-                  font-family="Arial"
-                  font-size="14">
-                EXERCISE DEMO
+            <text
+                x="400"
+                y="250"
+                text-anchor="middle"
+                fill="#55758d"
+                font-family="Arial"
+                font-size="14">
+                GIF SOURCE UNAVAILABLE
             </text>
 
         </svg>
@@ -936,18 +1020,22 @@ function createGifImage(ex){
 function renderHome(){
 
     const container =
-        document.getElementById("sessionButtons");
+        document.getElementById(
+            "sessionButtons"
+        );
 
     container.innerHTML = "";
 
     Object.keys(workouts).forEach(id=>{
 
-        const workout = workouts[id];
+        const workout =
+            workouts[id];
 
         const button =
             document.createElement("div");
 
-        button.className = "session-btn";
+        button.className =
+            "session-btn";
 
         button.onclick = ()=>{
             openSession(Number(id));
@@ -976,13 +1064,20 @@ function renderHome(){
             </div>
 
             <div class="session-progress">
-                <div id="sessionProgress${id}"></div>
+
+                <div
+                    id="sessionProgress${id}">
+                </div>
+
             </div>
         `;
 
         container.appendChild(button);
 
-        updateSessionProgress(Number(id));
+        updateSessionProgress(
+            Number(id)
+        );
+
     });
 }
 
@@ -1029,7 +1124,9 @@ function openSession(id){
 function renderExercises(){
 
     const container =
-        document.getElementById("exerciseList");
+        document.getElementById(
+            "exerciseList"
+        );
 
     container.innerHTML = "";
 
@@ -1046,7 +1143,8 @@ function renderExercises(){
             const card =
                 document.createElement("div");
 
-            card.className = "exercise";
+            card.className =
+                "exercise";
 
             card.id =
                 `exercise-${currentSession}-${index}`;
@@ -1121,12 +1219,17 @@ function renderExercises(){
             const sets =
                 info.querySelector(".sets");
 
-            for(let s=0;s<ex.sets;s++){
+            for(
+                let s=0;
+                s<ex.sets;
+                s++
+            ){
 
                 const wrapper =
                     document.createElement("div");
 
-                wrapper.className = "set";
+                wrapper.className =
+                    "set";
 
                 const id =
                     `s_${currentSession}_${index}_${s}`;
@@ -1144,7 +1247,9 @@ function renderExercises(){
 
                     <label for="${id}">
 
-                        <span>ست ${s+1}</span>
+                        <span>
+                            ست ${s+1}
+                        </span>
 
                         <span>
                             ${ex.reps}
@@ -1154,7 +1259,9 @@ function renderExercises(){
                 `;
 
                 const input =
-                    wrapper.querySelector("input");
+                    wrapper.querySelector(
+                        "input"
+                    );
 
                 input.addEventListener(
                     "change",
@@ -1175,6 +1282,7 @@ function renderExercises(){
                 index,
                 card
             );
+
         });
 
     updateOverall();
@@ -1185,7 +1293,10 @@ function renderExercises(){
    UPDATE EXERCISE
 ========================================================= */
 
-function updateExercise(index,card){
+function updateExercise(
+    index,
+    card
+){
 
     const inputs =
         card.querySelectorAll(
@@ -1194,13 +1305,15 @@ function updateExercise(index,card){
 
     const completed = [];
 
-    inputs.forEach((input,i)=>{
+    inputs.forEach(
+        (input,i)=>{
 
-        if(input.checked){
-            completed.push(i);
+            if(input.checked){
+                completed.push(i);
+            }
+
         }
-
-    });
+    );
 
     saveState(
         currentSession,
@@ -1213,13 +1326,19 @@ function updateExercise(index,card){
             .exercises[index]
             .sets;
 
-    if(completed.length === total){
+    if(
+        completed.length === total
+    ){
 
-        card.classList.add("completed");
+        card.classList.add(
+            "completed"
+        );
 
     }else{
 
-        card.classList.remove("completed");
+        card.classList.remove(
+            "completed"
+        );
 
     }
 
@@ -1234,50 +1353,66 @@ function updateExercise(index,card){
 function updateOverall(){
 
     const exercises =
-        workouts[currentSession].exercises;
+        workouts[currentSession]
+            .exercises;
 
     let totalSets = 0;
+
     let doneSets = 0;
 
-    exercises.forEach((ex,index)=>{
+    exercises.forEach(
+        (ex,index)=>{
 
-        totalSets += ex.sets;
+            totalSets += ex.sets;
 
-        doneSets +=
-            getState(
-                currentSession,
-                index
-            ).length;
+            doneSets +=
+                getState(
+                    currentSession,
+                    index
+                ).length;
 
-    });
+        }
+    );
 
     const percent =
         totalSets === 0
         ? 0
         : Math.round(
-            doneSets / totalSets * 100
+            doneSets /
+            totalSets *
+            100
         );
 
     document
-        .getElementById("overallBar")
+        .getElementById(
+            "overallBar"
+        )
         .style.width =
         percent + "%";
 
     document
-        .getElementById("overallText")
+        .getElementById(
+            "overallText"
+        )
         .textContent =
         percent + "%";
 
     const finish =
-        document.getElementById("finish");
+        document.getElementById(
+            "finish"
+        );
 
     if(percent === 100){
 
-        finish.classList.add("show");
+        finish.classList.add(
+            "show"
+        );
 
     }else{
 
-        finish.classList.remove("show");
+        finish.classList.remove(
+            "show"
+        );
 
     }
 
@@ -1297,20 +1432,30 @@ function updateSessionProgress(id){
         workouts[id].exercises;
 
     let total = 0;
+
     let done = 0;
 
-    exercises.forEach((ex,index)=>{
+    exercises.forEach(
+        (ex,index)=>{
 
-        total += ex.sets;
+            total += ex.sets;
 
-        done +=
-            getState(id,index).length;
+            done +=
+                getState(
+                    id,
+                    index
+                ).length;
 
-    });
+        }
+    );
 
     const percent =
         total
-        ? Math.round(done / total * 100)
+        ? Math.round(
+            done /
+            total *
+            100
+        )
         : 0;
 
     const bar =
@@ -1322,6 +1467,7 @@ function updateSessionProgress(id){
 
         bar.style.width =
             percent + "%";
+
     }
 }
 
@@ -1333,12 +1479,20 @@ function updateSessionProgress(id){
 function goHome(){
 
     document
-        .getElementById("workout")
-        .classList.add("hidden");
+        .getElementById(
+            "workout"
+        )
+        .classList.add(
+            "hidden"
+        );
 
     document
-        .getElementById("home")
-        .classList.remove("hidden");
+        .getElementById(
+            "home"
+        )
+        .classList.remove(
+            "hidden"
+        );
 
     renderHome();
 
@@ -1356,15 +1510,18 @@ function goHome(){
 function resetCurrentSession(){
 
     const exercises =
-        workouts[currentSession].exercises;
+        workouts[currentSession]
+            .exercises;
 
-    exercises.forEach((ex,index)=>{
+    exercises.forEach(
+        (ex,index)=>{
 
-        localStorage.removeItem(
-            `neongym_${currentSession}_${index}`
-        );
+            localStorage.removeItem(
+                `neongym_${currentSession}_${index}`
+            );
 
-    });
+        }
+    );
 
     renderExercises();
 }
@@ -1380,3 +1537,4 @@ renderHome();
 
 </body>
 </html>
+```
