@@ -1,18 +1,16 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NEON GYM</title>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap');
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-}
+<style>
+*{box-sizing:border-box}
 
 :root{
     --bg:#02050a;
@@ -29,288 +27,286 @@
     --shadow:0 0 30px rgba(0,140,255,.12);
 }
 
-body{
-    margin:0;
-    background:
-        radial-gradient(circle at 50% -10%,rgba(0,145,255,.22),transparent 35%),
-        radial-gradient(circle at 100% 100%,rgba(0,90,255,.10),transparent 35%),
-        var(--bg);
-    color:var(--text);
-    font-family:'Vazirmatn',Tahoma,sans-serif;
-    min-height:100vh;
-    overflow-x:hidden;
+html{
+    scroll-behavior:smooth;
 }
 
-body:before{
-    content:"";
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    background-image:
-        linear-gradient(rgba(0,140,255,.025) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(0,140,255,.025) 1px,transparent 1px);
-    background-size:35px 35px;
-    mask-image:linear-gradient(to bottom,black,transparent);
+body{
+    margin:0;
+    font-family:Vazirmatn,Tahoma,Arial,sans-serif;
+    background:
+        radial-gradient(circle at 50% -10%,rgba(0,140,255,.12),transparent 35%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+    color:var(--text);
+    min-height:100vh;
+}
+
+button,
+input{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.app{
+    min-height:100vh;
 }
 
 .header{
     position:sticky;
     top:0;
-    z-index:20;
-    padding:18px 16px 14px;
-    background:rgba(2,5,10,.82);
-    backdrop-filter:blur(18px);
-    border-bottom:1px solid rgba(0,174,255,.15);
-}
-
-.header-inner{
-    max-width:760px;
-    margin:auto;
+    z-index:50;
+    height:68px;
     display:flex;
-    justify-content:space-between;
     align-items:center;
+    justify-content:space-between;
+    padding:0 16px;
+    background:rgba(2,5,10,.88);
+    backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    box-shadow:0 5px 25px rgba(0,0,0,.35);
 }
 
 .logo{
     font-size:22px;
     font-weight:900;
-    letter-spacing:2px;
+    letter-spacing:1px;
     color:#fff;
-    text-shadow:
-        0 0 8px var(--blue),
-        0 0 25px rgba(0,170,255,.6);
+    text-shadow:0 0 15px rgba(0,200,255,.7);
 }
 
 .logo span{
     color:var(--cyan);
 }
 
-.status{
+.online{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:#8ba2b9;
     font-size:11px;
-    color:#6e8aa3;
-    border:1px solid rgba(0,170,255,.18);
-    padding:6px 10px;
-    border-radius:20px;
+    font-weight:700;
 }
 
-.status b{
-    color:var(--green);
+.online-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 10px var(--green);
 }
 
 main{
-    width:min(760px,100%);
+    width:min(1100px,100%);
     margin:auto;
-    padding:24px 15px 100px;
+    padding:18px 12px 40px;
 }
 
 .hero{
     text-align:center;
-    padding:28px 10px 25px;
+    padding:25px 8px 20px;
 }
 
 .hero h1{
     margin:0;
-    font-size:32px;
+    font-size:34px;
     font-weight:900;
-    letter-spacing:-1px;
+    letter-spacing:2px;
+    color:#fff;
+    text-shadow:
+        0 0 10px rgba(0,140,255,.8),
+        0 0 30px rgba(0,140,255,.25);
 }
 
 .hero h1 span{
-    color:var(--blue2);
-    text-shadow:0 0 20px rgba(0,190,255,.7);
+    color:var(--cyan);
 }
 
 .hero p{
+    margin:9px 0 0;
     color:var(--muted);
-    font-size:13px;
-    margin:10px 0 0;
+    font-size:12px;
+}
+
+.section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin:20px 3px 12px;
+}
+
+.section-title h2{
+    margin:0;
+    font-size:16px;
+    font-weight:800;
+}
+
+.section-title span{
+    color:var(--blue2);
+    font-size:11px;
 }
 
 .sessions{
     display:grid;
     grid-template-columns:1fr;
-    gap:14px;
+    gap:12px;
 }
 
 .session-btn{
     position:relative;
     overflow:hidden;
-    border:1px solid var(--border);
-    background:
-        linear-gradient(135deg,rgba(0,130,255,.12),rgba(3,10,18,.9));
-    border-radius:22px;
-    padding:21px;
-    color:white;
+    width:100%;
+    min-height:118px;
+    padding:18px;
     text-align:right;
-    cursor:pointer;
+    color:#fff;
+    background:
+        linear-gradient(145deg,rgba(0,140,255,.10),rgba(5,15,25,.92));
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    transition:.2s;
+}
+
+.session-btn:hover{
+    border-color:rgba(0,200,255,.5);
+    transform:translateY(-2px);
+}
+
+.session-btn:active{
+    transform:scale(.99);
+}
+
+.session-number{
+    color:var(--blue2);
+    font-size:11px;
+    font-weight:800;
+    margin-bottom:7px;
+}
+
+.session-name{
+    font-size:17px;
+    font-weight:900;
+}
+
+.session-info{
+    margin-top:7px;
+    color:var(--muted);
+    font-size:11px;
+}
+
+.progress{
+    height:5px;
+    margin-top:15px;
+    overflow:hidden;
+    background:#07101a;
+    border-radius:10px;
+}
+
+.progress-bar{
+    width:0%;
+    height:100%;
+    background:linear-gradient(90deg,var(--blue),var(--cyan));
+    box-shadow:0 0 12px rgba(0,200,255,.55);
+    transition:.25s;
+}
+
+.workout-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:10px 0 16px;
+}
+
+.back-btn{
+    width:42px;
+    height:42px;
+    border:1px solid var(--border);
+    border-radius:13px;
+    background:#06101b;
+    color:#fff;
+    font-size:20px;
+}
+
+.workout-title{
+    flex:1;
+}
+
+.workout-title h2{
+    margin:0;
+    font-size:20px;
+    font-weight:900;
+}
+
+.workout-title p{
+    margin:4px 0 0;
+    color:var(--muted);
+    font-size:11px;
+}
+
+.reset-btn{
+    border:1px solid rgba(255,70,70,.25);
+    background:rgba(255,40,40,.06);
+    color:#ff7b7b;
+    border-radius:11px;
+    padding:9px 10px;
+    font-size:10px;
+    font-weight:700;
+}
+
+.session-progress{
+    padding:13px 14px;
+    margin-bottom:15px;
+    background:rgba(7,17,29,.8);
+    border:1px solid var(--border);
+    border-radius:15px;
+}
+
+.session-progress-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:8px;
+}
+
+.session-progress-top strong{
+    color:var(--cyan);
+}
+
+.exercise-list{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+}
+
+.exercise-card{
+    overflow:hidden;
+    background:
+        linear-gradient(145deg,rgba(8,22,36,.96),rgba(4,10,18,.98));
+    border:1px solid var(--border);
+    border-radius:19px;
     box-shadow:var(--shadow);
     transition:.25s;
 }
 
-.session-btn:active{
-    transform:scale(.98);
-}
-
-.session-btn:before{
-    content:"";
-    position:absolute;
-    width:120px;
-    height:120px;
-    background:var(--blue);
-    filter:blur(70px);
-    opacity:.12;
-    left:-30px;
-    top:-30px;
-}
-
-.session-top{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-}
-
-.session-number{
-    font-size:12px;
-    color:var(--cyan);
-    font-weight:800;
-    letter-spacing:1px;
-}
-
-.session-icon{
-    width:48px;
-    height:48px;
-    border-radius:15px;
-    display:grid;
-    place-items:center;
-    background:rgba(0,145,255,.1);
-    border:1px solid rgba(0,180,255,.25);
-    font-size:22px;
-    box-shadow:0 0 20px rgba(0,150,255,.12);
-}
-
-.session-title{
-    margin-top:14px;
-    font-size:19px;
-    font-weight:800;
-}
-
-.session-sub{
-    margin-top:4px;
-    color:#6f879e;
-    font-size:12px;
-}
-
-.session-progress{
-    height:5px;
-    background:#0b1a29;
-    border-radius:20px;
-    margin-top:17px;
-    overflow:hidden;
-}
-
-.session-progress div{
-    height:100%;
-    width:0;
-    background:linear-gradient(90deg,var(--blue),var(--cyan));
-    box-shadow:0 0 10px var(--blue);
-    transition:.3s;
-}
-
-.hidden{
-    display:none!important;
-}
-
-.back{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    border:0;
-    background:transparent;
-    color:#82a0b9;
-    font-family:inherit;
-    font-size:13px;
-    padding:8px 0;
-    cursor:pointer;
-}
-
-.workout-head{
-    margin:14px 0 20px;
-}
-
-.workout-head h2{
-    margin:0;
-    font-size:25px;
-}
-
-.workout-head p{
-    color:#6c849c;
-    font-size:12px;
-    margin:7px 0 0;
-}
-
-.overall{
-    margin-top:18px;
-    padding:15px;
-    background:rgba(0,130,255,.06);
-    border:1px solid rgba(0,150,255,.14);
-    border-radius:17px;
-}
-
-.overall-line{
-    display:flex;
-    justify-content:space-between;
-    font-size:12px;
-    color:#8ca4ba;
-    margin-bottom:9px;
-}
-
-.overall-line strong{
-    color:var(--cyan);
-}
-
-.overall-bar{
-    height:7px;
-    background:#081522;
-    border-radius:20px;
-    overflow:hidden;
-}
-
-.overall-bar div{
-    width:0;
-    height:100%;
-    background:linear-gradient(90deg,var(--blue),var(--cyan));
-    box-shadow:0 0 14px var(--blue);
-    transition:.35s;
-}
-
-.exercise{
-    position:relative;
-    margin-bottom:17px;
-    background:
-        linear-gradient(145deg,rgba(8,22,36,.98),rgba(3,9,16,.98));
-    border:1px solid rgba(0,160,255,.16);
-    border-radius:22px;
-    overflow:hidden;
-    box-shadow:0 12px 35px rgba(0,0,0,.2);
-    transition:.35s;
-}
-
-.exercise.completed{
-    border-color:rgba(0,255,130,.55);
-    box-shadow:
-        0 0 0 1px rgba(0,255,130,.08),
-        0 0 28px rgba(0,255,130,.13);
-}
-
-.exercise.completed .exercise-title{
-    color:var(--green);
+.exercise-card.completed{
+    border-color:rgba(0,255,136,.45);
+    box-shadow:0 0 25px rgba(0,255,136,.08);
 }
 
 .gif-wrap{
     position:relative;
     height:220px;
-    background:#02070c;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     overflow:hidden;
+    background:#03080e;
+    border-bottom:1px solid rgba(0,170,255,.13);
 }
 
 .gif-wrap img{
@@ -325,62 +321,64 @@ main{
     inset:0;
     pointer-events:none;
     background:
-        linear-gradient(to bottom,transparent 55%,rgba(2,5,9,.72));
+        linear-gradient(180deg,rgba(0,0,0,.08),transparent 45%,rgba(0,0,0,.3));
 }
 
 .exercise-number{
     position:absolute;
-    top:12px;
-    right:12px;
-    background:rgba(0,7,14,.75);
-    border:1px solid rgba(0,180,255,.3);
-    backdrop-filter:blur(8px);
+    top:10px;
+    right:10px;
+    min-width:31px;
+    height:31px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     border-radius:10px;
-    padding:6px 9px;
-    font-size:11px;
+    background:rgba(0,10,20,.82);
+    border:1px solid rgba(0,200,255,.3);
     color:var(--cyan);
+    font-size:11px;
+    font-weight:900;
+    backdrop-filter:blur(8px);
 }
 
-.exercise-info{
-    padding:16px;
+.exercise-body{
+    padding:14px;
 }
 
 .exercise-title{
-    font-size:18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.exercise-title h3{
+    margin:0;
+    font-size:15px;
     font-weight:800;
 }
 
-.exercise-meta{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    margin-top:8px;
+.exercise-card.completed .exercise-title h3{
+    color:var(--green);
 }
 
-.badge{
+.complete-text{
+    display:none;
+    color:var(--green);
     font-size:10px;
-    color:#91aac0;
-    padding:5px 8px;
-    border-radius:8px;
-    background:#091725;
-    border:1px solid rgba(100,170,220,.1);
+    font-weight:700;
 }
 
-.target{
-    color:var(--cyan);
-}
-
-.set-title{
-    margin-top:17px;
-    color:#668198;
-    font-size:11px;
+.exercise-card.completed .complete-text{
+    display:block;
 }
 
 .sets{
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:7px;
-    margin-top:8px;
 }
 
 .set{
@@ -388,801 +386,565 @@ main{
 }
 
 .set input{
-    display:none;
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
 }
 
 .set label{
-    min-height:48px;
-    border:1px solid rgba(100,150,190,.14);
-    background:#07121e;
-    border-radius:12px;
+    min-height:40px;
     display:flex;
     align-items:center;
     justify-content:center;
-    flex-direction:column;
-    gap:2px;
-    cursor:pointer;
+    border:1px solid rgba(0,150,255,.16);
+    background:#06101a;
+    border-radius:11px;
+    color:#8ca2b8;
+    font-size:10px;
+    font-weight:700;
     transition:.2s;
 }
 
-.set label span:first-child{
-    font-size:10px;
-    color:#5d748a;
-}
-
-.set label span:last-child{
-    font-size:13px;
-    font-weight:800;
-    color:#b6c9d8;
-}
-
 .set input:checked + label{
-    background:rgba(0,255,135,.08);
-    border-color:rgba(0,255,135,.55);
-    box-shadow:0 0 15px rgba(0,255,135,.09);
-}
-
-.set input:checked + label span:first-child,
-.set input:checked + label span:last-child{
-    color:var(--green);
-}
-
-.complete-message{
-    display:none;
-    margin-top:12px;
-    padding:9px;
-    border-radius:10px;
-    text-align:center;
-    font-size:11px;
-    color:var(--green);
-    background:rgba(0,255,135,.06);
-    border:1px solid rgba(0,255,135,.15);
-}
-
-.exercise.completed .complete-message{
-    display:block;
+    color:#00140b;
+    background:var(--green);
+    border-color:var(--green);
+    box-shadow:0 0 15px rgba(0,255,136,.28);
 }
 
 .finish{
     display:none;
-    margin-top:20px;
-    padding:24px;
-    border-radius:22px;
+    margin-top:18px;
+    padding:22px 16px;
     text-align:center;
-    border:1px solid rgba(0,255,135,.35);
-    background:linear-gradient(145deg,rgba(0,255,135,.08),rgba(0,20,15,.5));
-    box-shadow:0 0 35px rgba(0,255,135,.08);
+    border:1px solid rgba(0,255,136,.35);
+    border-radius:18px;
+    background:rgba(0,255,136,.04);
 }
 
 .finish.show{
     display:block;
-    animation:pop .4s ease;
 }
 
-.finish-icon{
-    font-size:40px;
-}
-
-.finish h3{
-    margin:10px 0 5px;
+.finish strong{
+    display:block;
     color:var(--green);
+    font-size:19px;
 }
 
-.finish p{
-    margin:0;
-    color:#759080;
-    font-size:12px;
+.finish span{
+    display:block;
+    margin-top:6px;
+    color:var(--muted);
+    font-size:11px;
 }
 
-.reset{
-    margin-top:15px;
-    border:1px solid rgba(255,80,100,.25);
-    color:#ff7588;
-    background:rgba(255,60,80,.06);
-    padding:9px 14px;
-    border-radius:10px;
-    font-family:inherit;
-    cursor:pointer;
+.empty{
+    padding:30px;
+    text-align:center;
+    color:var(--muted);
 }
 
-@keyframes pop{
-    from{
-        transform:scale(.96);
-        opacity:0;
-    }
-    to{
-        transform:scale(1);
-        opacity:1;
-    }
+.hidden{
+    display:none!important;
 }
 
 @media(min-width:600px){
+    main{
+        padding-left:18px;
+        padding-right:18px;
+    }
 
     .sessions{
         grid-template-columns:repeat(3,1fr);
     }
 
-    .session-btn{
-        min-height:190px;
+    .exercise-list{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .hero h1{
+        font-size:42px;
+    }
+}
+
+@media(min-width:900px){
+    .exercise-list{
+        grid-template-columns:repeat(3,1fr);
     }
 }
 </style>
 </head>
 
 <body>
+<div class="app">
 
 <header class="header">
+    <div class="logo">NEON<span>GYM</span></div>
 
-    <div class="header-inner">
-
-        <div class="logo">
-            NEON<span>GYM</span>
-        </div>
-
-        <div class="status">
-            ● <b>ONLINE</b>
-        </div>
-
+    <div class="online">
+        <span class="online-dot"></span>
+        ONLINE
     </div>
-
 </header>
-
 
 <main>
 
-<section id="home">
+    <section id="home">
 
-    <div class="hero">
+        <div class="hero">
+            <h1>NEON<span>GYM</span></h1>
+            <p>تمرین هوشمند • پیگیری ست‌ها • پیشرفت واقعی</p>
+        </div>
 
-        <h1>
-            برنامه <span>تمرینی</span>
-        </h1>
+        <div class="section-title">
+            <h2>جلسات تمرینی</h2>
+            <span>۳ SESSION</span>
+        </div>
 
-        <p>
-            تمرین کن • ست‌ها را ثبت کن • پیشرفتت را ببین
-        </p>
+        <div class="sessions" id="sessions"></div>
 
-    </div>
+    </section>
 
+    <section id="workout" class="hidden">
 
-    <div
-        class="sessions"
-        id="sessionButtons">
-    </div>
+        <div class="workout-head">
 
-</section>
+            <button class="back-btn" onclick="goHome()">‹</button>
 
-
-<section
-    id="workout"
-    class="hidden">
-
-    <button
-        class="back"
-        onclick="goHome()">
-
-        ← بازگشت به جلسات
-
-    </button>
-
-
-    <div class="workout-head">
-
-        <h2 id="workoutTitle"></h2>
-
-        <p id="workoutSubtitle"></p>
-
-
-        <div class="overall">
-
-            <div class="overall-line">
-
-                <span>
-                    پیشرفت جلسه
-                </span>
-
-                <strong id="overallText">
-                    0%
-                </strong>
-
+            <div class="workout-title">
+                <h2 id="workoutName"></h2>
+                <p id="workoutInfo"></p>
             </div>
 
+            <button class="reset-btn" onclick="resetCurrentSession()">
+                ریست
+            </button>
 
-            <div class="overall-bar">
+        </div>
 
-                <div id="overallBar"></div>
+        <div class="session-progress">
 
+            <div class="session-progress-top">
+                <span>پیشرفت جلسه</span>
+                <strong id="sessionPercent">0%</strong>
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar" id="sessionProgressBar"></div>
             </div>
 
         </div>
 
-    </div>
+        <div class="exercise-list" id="exerciseList"></div>
 
-
-    <div id="exerciseList"></div>
-
-
-    <div
-        class="finish"
-        id="finish">
-
-        <div class="finish-icon">
-            ✓
+        <div class="finish" id="finish">
+            <strong>تمرین کامل شد</strong>
+            <span>تمام ست‌های این جلسه را انجام دادی.</span>
         </div>
 
-        <h3>
-            جلسه کامل شد
-        </h3>
-
-        <p>
-            تمام حرکات این جلسه انجام شد.
-        </p>
-
-        <button
-            class="reset"
-            onclick="resetCurrentSession()">
-
-            شروع مجدد جلسه
-
-        </button>
-
-    </div>
-
-</section>
+    </section>
 
 </main>
 
+</div>
 
 <script>
-
-/* =========================================================
-   GIF SOURCES
-========================================================= */
-
-const GIF = {
-
-    /* =========================
-       SESSION 1
-    ========================= */
-
-    bench:
-    "https://d205bpvrqc9yn1.cloudfront.net/0025.gif",
-
-    incline:
-    "https://d205bpvrqc9yn1.cloudfront.net/0314.gif",
-
-    fly:
-    "https://d205bpvrqc9yn1.cloudfront.net/0308.gif",
-
-    pushup:
-    "https://d205bpvrqc9yn1.cloudfront.net/0662.gif",
-
-    shoulder:
-    "https://d205bpvrqc9yn1.cloudfront.net/0405.gif",
-
-    lateral:
-    "https://d205bpvrqc9yn1.cloudfront.net/0334.gif",
-
-    triceps:
-    "https://d205bpvrqc9yn1.cloudfront.net/0241.gif",
-
-
-    /* =========================
-       SESSION 2
-    ========================= */
-
-    squat:
-    "https://d205bpvrqc9yn1.cloudfront.net/1436.gif",
-
-    legpress:
-    "https://d205bpvrqc9yn1.cloudfront.net/0739.gif",
-
-    legcurl:
-    "https://d205bpvrqc9yn1.cloudfront.net/0586.gif",
-
-    legextension:
-    "https://d205bpvrqc9yn1.cloudfront.net/0585.gif",
-
-    calf:
-    "https://d205bpvrqc9yn1.cloudfront.net/0605.gif",
-
-    crunch:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/bicycyle%20crunches.gif",
-
-    plank:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/plank.gif",
-
-
-    /* =========================
-       SESSION 3
-    ========================= */
-
-    lat:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/pull%20down.gif",
-
-    row:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/sitting%20cabel%20row.gif",
-
-    pullup:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/wide%20grip%20pull%20ups.gif",
-
-    facepull:
-    "https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif",
-
-    barbellcurl:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/standing-barbell-curl.gif",
-
-    dumbbellcurl:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/bicep%20curl.gif",
-
-    hammer:
-    "https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/Hammer.gif"
-};
-
-
-/* =========================================================
-   PROGRAM
-========================================================= */
-
 const workouts = {
 
-1:{
-    title:"جلسه اول",
-    subtitle:"سینه + سرشانه + پشت‌بازو",
-    icon:"◈",
+    1:{
+        name:"سینه + سرشانه + پشت‌بازو + شکم",
+        info:"یکشنبه",
+        exercises:[
 
-    exercises:[
+            {
+                name:"پرس سینه هالتر",
+                sets:4,
+                reps:"۸–۱۰",
+                gif:"https://bfit.ir/storage/workouts/5d6d3413a0a4c-1567437843.gif"
+            },
 
-        {
-            name:"پرس سینه هالتر",
-            sets:4,
-            reps:"8–10",
-            target:"سینه",
-            equipment:"هالتر + نیمکت",
-            gif:GIF.bench
-        },
+            {
+                name:"پرس بالا سینه دمبل",
+                sets:3,
+                reps:"۸–۱۲",
+                gif:"https://bfit.ir/storage/workouts/5d6d30894b4b2-1567436937.gif"
+            },
 
-        {
-            name:"پرس بالا سینه دمبل",
-            sets:3,
-            reps:"8–12",
-            target:"بالاسینه",
-            equipment:"دمبل + نیمکت شیب‌دار",
-            gif:GIF.incline
-        },
+            {
+                name:"قفسه سینه دمبل",
+                sets:3,
+                reps:"۱۰–۱۲",
+                gif:"https://bfit.ir/storage/workouts/5d6e71cfb4b3e-1567519183.gif"
+            },
 
-        {
-            name:"قفسه سینه دمبل",
-            sets:3,
-            reps:"10–12",
-            target:"سینه",
-            equipment:"دمبل + نیمکت",
-            gif:GIF.fly
-        },
+            {
+                name:"شنا",
+                sets:2,
+                reps:"نزدیک ناتوانی",
+                gif:"https://shahresalamat.ir/blog/storage/2019/08/Standard-pushup.gif"
+            },
 
-        {
-            name:"شنا",
-            sets:2,
-            reps:"نزدیک ناتوانی",
-            target:"سینه",
-            equipment:"وزن بدن",
-            gif:GIF.pushup
-        },
+            {
+                name:"پرس سرشانه دمبل",
+                sets:3,
+                reps:"۸–۱۰",
+                gif:"https://bfit.ir/storage/workouts/5d6fb3ae66091-1567601582.gif"
+            },
 
-        {
-            name:"پرس سرشانه دمبل",
-            sets:3,
-            reps:"8–10",
-            target:"سرشانه",
-            equipment:"دمبل + نیمکت",
-            gif:GIF.shoulder
-        },
+            {
+                name:"نشر جانب دمبل",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://bfit.ir/storage/workouts/5d6fb3493c0a5-1567601481.gif"
+            },
 
-        {
-            name:"نشر جانب دمبل",
-            sets:3,
-            reps:"12–15",
-            target:"سرشانه میانی",
-            equipment:"دمبل",
-            gif:GIF.lateral
-        },
+            {
+                name:"پشت‌بازو سیم‌کش طناب",
+                sets:3,
+                reps:"۱۰–۱۲",
+                gif:"https://bfit.ir/storage/workouts/5d71603c8b025-1567711292.gif"
+            },
 
-        {
-            name:"پشت‌بازو سیم‌کش طناب",
-            sets:3,
-            reps:"10–12",
-            target:"پشت‌بازو",
-            equipment:"سیم‌کش + طناب",
-            gif:GIF.triceps
-        }
+            {
+                name:"کرانچ سیم‌کش",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://ranjoganj.ir/wp-content/uploads/a-3074.gif"
+            },
 
-    ]
-},
+            {
+                name:"بالا آوردن پا",
+                sets:3,
+                reps:"۱۰–۱۵",
+                gif:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQo7yhjfHWlPNSX9VfkmqqUnh7QziZPYL3RvGnuQw6leA&s=10"
+            },
 
+            {
+                name:"تردمیل",
+                sets:1,
+                reps:"۱۲ دقیقه",
+                cardio:true
+            }
 
-2:{
-    title:"جلسه دوم",
-    subtitle:"پا + شکم",
-    icon:"◉",
+        ]
+    },
 
-    exercises:[
+    2:{
+        name:"پا + شکم + ساعد",
+        info:"چهارشنبه",
+        exercises:[
 
-        {
-            name:"اسکوات هالتر",
-            sets:4,
-            reps:"8–10",
-            target:"ران + باسن",
-            equipment:"رک + هالتر",
-            gif:GIF.squat
-        },
+            {
+                name:"اسکوات هالتر",
+                sets:4,
+                reps:"۸–۱۰",
+                gif:"https://mojclub.com/wp-content/uploads/2020/02/atl_20190325155427_188.gif"
+            },
 
-        {
-            name:"پرس پا",
-            sets:3,
-            reps:"10–12",
-            target:"چهارسر ران",
-            equipment:"دستگاه پرس پا",
-            gif:GIF.legpress
-        },
+            {
+                name:"جلو پا دستگاه",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://fa.pelank.com/wp-content/uploads/2026/07/LEG-EXTENSION.gif"
+            },
 
-        {
-            name:"پشت پا دستگاه",
-            sets:3,
-            reps:"10–12",
-            target:"همسترینگ",
-            equipment:"دستگاه پشت پا",
-            gif:GIF.legcurl
-        },
+            {
+                name:"ساق پا",
+                sets:4,
+                reps:"۱۲–۱۵",
+                gif:"https://bfit.ir/storage/workouts/5c9e1d63e0fee-1553866083.gif"
+            },
 
-        {
-            name:"جلو پا دستگاه",
-            sets:3,
-            reps:"12–15",
-            target:"چهارسر ران",
-            equipment:"دستگاه جلو پا",
-            gif:GIF.legextension
-        },
+            {
+                name:"کرانچ",
+                sets:3,
+                reps:"۱۵–۲۰",
+                gif:"https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/bicycyle%20crunches.gif"
+            },
 
-        {
-            name:"ساق پا",
-            sets:4,
-            reps:"12–15",
-            target:"ساق",
-            equipment:"دستگاه ساق",
-            gif:GIF.calf
-        },
+            {
+                name:"پلانک",
+                sets:3,
+                reps:"۳۰–۶۰ ثانیه",
+                gif:"https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/plank.gif"
+            },
 
-        {
-            name:"کرانچ",
-            sets:3,
-            reps:"15–20",
-            target:"شکم",
-            equipment:"زمین / دستگاه",
-            gif:GIF.crunch
-        },
+            {
+                name:"بالا آوردن زانو",
+                sets:3,
+                reps:"۱۰–۱۵",
+                gif:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSN-K018O7lvNIrJS898Sak_1crBd91BAORGk9P-dEoJA&s=10"
+            },
 
-        {
-            name:"پلانک",
-            sets:3,
-            reps:"30–60 ثانیه",
-            target:"Core",
-            equipment:"وزن بدن",
-            gif:GIF.plank
-        }
+            {
+                name:"ساعد هالتر از مچ رو به بالا",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://routination.com/wp-content/uploads/2023/12/exercises-2.gif"
+            },
 
-    ]
-},
+            {
+                name:"ساعد هالتر از مچ رو به پایین",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWSfYiPtZlhxSG5zNmiI89EzJK2PH_AKL1aIqElQxqWQ&s=10"
+            },
 
+            {
+                name:"تردمیل",
+                sets:1,
+                reps:"۱۲ دقیقه",
+                cardio:true
+            }
 
-3:{
-    title:"جلسه سوم",
-    subtitle:"پشت + جلو بازو",
-    icon:"◇",
+        ]
+    },
 
-    exercises:[
+    3:{
+        name:"پشت + جلو بازو + ساعد + شکم",
+        info:"جمعه",
+        exercises:[
 
-        {
-            name:"لت‌پول‌داون",
-            sets:4,
-            reps:"8–12",
-            target:"زیربغل",
-            equipment:"دستگاه لت",
-            gif:GIF.lat
-        },
+            {
+                name:"لت‌پول‌داون",
+                sets:4,
+                reps:"۸–۱۲",
+                gif:"https://cdnfa.ir/mokamelshope/8ed3/uploads/blog/10-lt-pool-daon-tarrahi-sinh.gif"
+            },
 
-        {
-            name:"قایقی سیم‌کش",
-            sets:3,
-            reps:"10–12",
-            target:"وسط پشت",
-            equipment:"سیم‌کش",
-            gif:GIF.row
-        },
+            {
+                name:"قایقی سیم‌کش",
+                sets:3,
+                reps:"۱۰–۱۲",
+                gif:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQe58aToWAZ4gobcTUg8g_nJ-1mWxlHhbTK5S7k_AjeBQ&s=10"
+            },
 
-        {
-            name:"بارفیکس دست جمع",
-            sets:3,
-            reps:"6–10",
-            target:"زیربغل",
-            equipment:"میله بارفیکس",
-            gif:GIF.pullup
-        },
+            {
+                name:"بارفیکس دست جمع",
+                sets:3,
+                reps:"۶–۱۰",
+                gif:"https://morabihamrah.com/wp-content/uploads/2024/01/Close-Grip-Chin-Up.gif"
+            },
 
-        {
-            name:"فیس‌پول",
-            sets:3,
-            reps:"12–15",
-            target:"پشت سرشانه",
-            equipment:"سیم‌کش + طناب",
-            gif:GIF.facepull
-        },
+            {
+                name:"فیس‌پول",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxkpikZkMTQwboKaayRpcFAFzbMsy-xFoqYg2Acr4CYQ&s=10"
+            },
 
-        {
-            name:"جلو بازو هالتر",
-            sets:3,
-            reps:"8–12",
-            target:"جلو بازو",
-            equipment:"هالتر",
-            gif:GIF.barbellcurl
-        },
+            {
+                name:"جلو بازو هالتر",
+                sets:3,
+                reps:"۸–۱۲",
+                gif:"https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/standing-barbell-curl.gif"
+            },
 
-        {
-            name:"جلو بازو دمبل تناوبی",
-            sets:3,
-            reps:"10–12",
-            target:"جلو بازو",
-            equipment:"دمبل",
-            gif:GIF.dumbbellcurl
-        },
+            {
+                name:"جلو بازو دمبل تناوبی",
+                sets:3,
+                reps:"۱۰–۱۲",
+                gif:"https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/bicep%20curl.gif"
+            },
 
-        {
-            name:"جلو بازو چکشی",
-            sets:3,
-            reps:"10–12",
-            target:"جلو بازو + ساعد",
-            equipment:"دمبل",
-            gif:GIF.hammer
-        }
+            {
+                name:"جلو بازو چکشی",
+                sets:3,
+                reps:"۱۰–۱۲",
+                gif:"https://raw.githubusercontent.com/pallavee-2705/GETSETFIT/main/Hammer.gif"
+            },
 
-    ]
-}
+            {
+                name:"ساعد مچ‌برعکس با هالتر",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTV0n1-N6WvF6ZKgK_MkZM_NvFflCp9pxQIRbbWhxyDYQ&s=10"
+            },
+
+            {
+                name:"کرانچ معکوس",
+                sets:3,
+                reps:"۱۲–۱۵",
+                gif:"https://reytonsport.com/wp-content/uploads/2024/07/%DA%A9%D8%B1%D8%A7%D9%86%DA%86-%D9%85%D8%B9%DA%A9%D8%B1%D9%88%D8%B3.gif"
+            },
+
+            {
+                name:"کرانچ دوچرخه",
+                sets:3,
+                reps:"۱۵–۲۰",
+                gif:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGrhO6yY-zRM1B32AZwMRayibH7YxrbOdJZwSpa3242A&s=10"
+            },
+
+            {
+                name:"تردمیل",
+                sets:1,
+                reps:"۱۲ دقیقه",
+                cardio:true
+            }
+
+        ]
+    }
 
 };
-
-
-/* =========================================================
-   STATE
-========================================================= */
 
 let currentSession = 1;
 
-
-/* =========================================================
-   IMPORTANT:
-   پاک شدن تیک‌ها با هر بار Refresh
-========================================================= */
-
+/* با رفرش صفحه تمام تیک‌های قبلی پاک می‌شوند */
 Object.keys(localStorage)
 .filter(key => key.startsWith("neongym_"))
 .forEach(key => {
-
     localStorage.removeItem(key);
-
 });
 
+function getState(session,exerciseIndex){
+    const key = `neongym_${session}_${exerciseIndex}`;
+    const saved = localStorage.getItem(key);
 
-/* =========================================================
-   LOCAL STORAGE
-========================================================= */
+    if(!saved){
+        return [];
+    }
 
-function getState(
-    session,
-    exerciseIndex
-){
-
-    const key =
-        `neongym_${session}_${exerciseIndex}`;
-
-    return JSON.parse(
-        localStorage.getItem(key) || "[]"
-    );
+    try{
+        return JSON.parse(saved);
+    }catch{
+        return [];
+    }
 }
 
-
-function saveState(
-    session,
-    exerciseIndex,
-    state
-){
-
-    const key =
-        `neongym_${session}_${exerciseIndex}`;
-
-    localStorage.setItem(
-        key,
-        JSON.stringify(state)
-    );
+function saveState(session,exerciseIndex,state){
+    const key = `neongym_${session}_${exerciseIndex}`;
+    localStorage.setItem(key,JSON.stringify(state));
 }
-
-
-/* =========================================================
-   GIF
-========================================================= */
 
 function createGifImage(ex){
 
-    const img =
-        document.createElement("img");
+    if(ex.cardio){
+        return `
+            <div class="gif-wrap">
+                <div style="
+                    width:100%;
+                    height:100%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    flex-direction:column;
+                    gap:8px;
+                    color:#00c8ff;
+                    background:
+                    radial-gradient(circle,rgba(0,140,255,.12),transparent 60%);
+                ">
+                    <div style="
+                        font-size:42px;
+                        line-height:1;
+                        text-shadow:0 0 20px rgba(0,200,255,.7);
+                    ">🏃</div>
+                    <div style="
+                        font-size:12px;
+                        font-weight:800;
+                        color:#7890a8;
+                    ">تردمیل • ${ex.reps}</div>
+                </div>
+                <div class="gif-overlay"></div>
+            </div>
+        `;
+    }
 
-    img.src = ex.gif;
-
-    img.alt = ex.name;
-
-    img.loading = "lazy";
-
-    img.onerror = function(){
-
-        this.onerror = null;
-
-        this.src =
-        "data:image/svg+xml;charset=UTF-8," +
-        encodeURIComponent(`
-
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="800"
-             height="450">
-
-            <rect
-                width="800"
-                height="450"
-                fill="#02070c"/>
-
-            <circle
-                cx="400"
-                cy="220"
-                r="85"
-                fill="none"
-                stroke="#00aaff"
-                stroke-width="3">
-
-                <animate
-                    attributeName="r"
-                    values="65;105;65"
-                    dur="1.5s"
-                    repeatCount="indefinite"/>
-
-            </circle>
-
-            <text
-                x="400"
-                y="215"
-                text-anchor="middle"
-                fill="#00d9ff"
-                font-family="Arial"
-                font-size="26"
-                font-weight="bold">
-
-                ${ex.name}
-
-            </text>
-
-            <text
-                x="400"
-                y="250"
-                text-anchor="middle"
-                fill="#55758d"
-                font-family="Arial"
-                font-size="14">
-
-                GIF SOURCE UNAVAILABLE
-
-            </text>
-
-        </svg>
-
-        `);
-    };
-
-    return img;
+    return `
+        <div class="gif-wrap">
+            <img
+                src="${ex.gif}"
+                alt="${ex.name}"
+                loading="lazy"
+                onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+                        <rect width="100%" height="100%" fill="#03080e"/>
+                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+                              fill="#00c8ff" font-size="22" font-family="Arial">
+                            GIF NOT AVAILABLE
+                        </text>
+                    </svg>
+                `)}';"
+            >
+            <div class="gif-overlay"></div>
+            <div class="exercise-number">${exerciseNumber(ex)}</div>
+        </div>
+    `;
 }
 
+function exerciseNumber(ex){
+    const all = Object.values(workouts)
+        .flatMap(w => w.exercises);
 
-/* =========================================================
-   HOME
-========================================================= */
+    return all.indexOf(ex) + 1;
+}
 
 function renderHome(){
 
-    const container =
-        document.getElementById(
-            "sessionButtons"
-        );
+    const container = document.getElementById("sessions");
 
     container.innerHTML = "";
 
-    Object.keys(workouts)
-    .forEach(id=>{
+    Object.entries(workouts).forEach(([id,workout])=>{
 
-        const workout =
-            workouts[id];
-
-        const button =
-            document.createElement("div");
-
-        button.className =
-            "session-btn";
-
-        button.onclick = ()=>{
-            openSession(Number(id));
-        };
-
-        button.innerHTML = `
-
-            <div class="session-top">
-
-                <div class="session-number">
-                    SESSION 0${id}
-                </div>
-
-                <div class="session-icon">
-                    ${workout.icon}
-                </div>
-
-            </div>
-
-            <div class="session-title">
-                ${workout.title}
-            </div>
-
-            <div class="session-sub">
-                ${workout.subtitle}
-            </div>
-
-            <div class="session-progress">
-
-                <div
-                    id="sessionProgress${id}">
-                </div>
-
-            </div>
-
-        `;
-
-        container.appendChild(button);
-
-        updateSessionProgress(
-            Number(id)
+        const totalSets = workout.exercises.reduce(
+            (sum,ex)=>sum + ex.sets,
+            0
         );
 
+        let doneSets = 0;
+
+        workout.exercises.forEach((ex,index)=>{
+            doneSets += getState(id,index).length;
+        });
+
+        const percent = totalSets
+            ? Math.round((doneSets / totalSets) * 100)
+            : 0;
+
+        const button = document.createElement("button");
+
+        button.className = "session-btn";
+
+        button.innerHTML = `
+            <div class="session-number">
+                SESSION ${id}
+            </div>
+
+            <div class="session-name">
+                ${workout.name}
+            </div>
+
+            <div class="session-info">
+                ${workout.info} • ${workout.exercises.length} حرکت
+            </div>
+
+            <div class="progress">
+                <div
+                    class="progress-bar"
+                    style="width:${percent}%"
+                ></div>
+            </div>
+        `;
+
+        button.onclick = ()=>openSession(Number(id));
+
+        container.appendChild(button);
     });
 }
-
-
-/* =========================================================
-   OPEN SESSION
-========================================================= */
 
 function openSession(id){
 
     currentSession = id;
 
-    document
-    .getElementById("home")
-    .classList.add("hidden");
+    document.getElementById("home").classList.add("hidden");
+    document.getElementById("workout").classList.remove("hidden");
 
-    document
-    .getElementById("workout")
-    .classList.remove("hidden");
+    document.getElementById("workoutName").textContent =
+        workouts[id].name;
 
-    document
-    .getElementById("workoutTitle")
-    .textContent =
-        workouts[id].title;
-
-    document
-    .getElementById("workoutSubtitle")
-    .textContent =
-        workouts[id].subtitle;
+    document.getElementById("workoutInfo").textContent =
+        workouts[id].info;
 
     renderExercises();
 
@@ -1191,468 +953,241 @@ function openSession(id){
         behavior:"smooth"
     });
 }
-
-
-/* =========================================================
-   RENDER EXERCISES
-========================================================= */
 
 function renderExercises(){
 
-    const container =
-        document.getElementById(
-            "exerciseList"
-        );
+    const list = document.getElementById("exerciseList");
 
-    container.innerHTML = "";
+    list.innerHTML = "";
 
-    workouts[currentSession]
-    .exercises
-    .forEach((ex,index)=>{
+    const workout = workouts[currentSession];
 
-        const saved =
-            getState(
-                currentSession,
-                index
-            );
+    workout.exercises.forEach((ex,index)=>{
 
-        const card =
-            document.createElement("div");
+        const card = document.createElement("article");
 
-        card.className =
-            "exercise";
+        card.className = "exercise-card";
 
-        card.id =
-            `exercise-${currentSession}-${index}`;
+        const state = getState(currentSession,index);
 
-
-        const gif =
-            createGifImage(ex);
-
-        const gifWrap =
-            document.createElement("div");
-
-        gifWrap.className =
-            "gif-wrap";
-
-        gifWrap.appendChild(gif);
-
-        gifWrap.innerHTML += `
-
-            <div class="gif-overlay"></div>
-
-            <div class="exercise-number">
-                حرکت ${index+1}
-            </div>
-
-        `;
-
-        card.appendChild(gifWrap);
-
-
-        const info =
-            document.createElement("div");
-
-        info.className =
-            "exercise-info";
-
-        info.innerHTML = `
-
-            <div class="exercise-title">
-                ${ex.name}
-            </div>
-
-            <div class="exercise-meta">
-
-                <div class="badge">
-                    ${ex.equipment}
-                </div>
-
-                <div class="badge target">
-                    ${ex.target}
-                </div>
-
-                <div class="badge">
-                    ${ex.sets} ست
-                </div>
-
-                <div class="badge">
-                    ${ex.reps}
-                </div>
-
-            </div>
-
-            <div class="set-title">
-                ست‌های انجام‌شده را تیک بزن
-            </div>
-
-            <div class="sets"></div>
-
-            <div class="complete-message">
-                ✓ حرکت کامل شد
-            </div>
-
-        `;
-
-        card.appendChild(info);
-
-
-        const sets =
-            info.querySelector(".sets");
-
-
-        for(
-            let s=0;
-            s<ex.sets;
-            s++
-        ){
-
-            const wrapper =
-                document.createElement("div");
-
-            wrapper.className =
-                "set";
-
-            const id =
-                `s_${currentSession}_${index}_${s}`;
-
-            const checked =
-                saved.includes(s);
-
-            wrapper.innerHTML = `
-
-                <input
-                    type="checkbox"
-                    id="${id}"
-                    ${checked ? "checked":""}
-                >
-
-                <label for="${id}">
-
-                    <span>
-                        ست ${s+1}
-                    </span>
-
-                    <span>
-                        ${ex.reps}
-                    </span>
-
-                </label>
-
-            `;
-
-
-            const input =
-                wrapper.querySelector(
-                    "input"
-                );
-
-            input.addEventListener(
-                "change",
-                ()=>{
-                    updateExercise(
-                        index,
-                        card
-                    );
-                }
-            );
-
-
-            sets.appendChild(wrapper);
-
+        if(state.length === ex.sets){
+            card.classList.add("completed");
         }
 
+        const setsHTML = Array.from(
+            {length:ex.sets},
+            (_,setIndex)=>{
 
-        container.appendChild(card);
+                const checked = state.includes(setIndex);
 
+                return `
+                    <div class="set">
 
-        updateExercise(
-            index,
-            card
-        );
+                        <input
+                            type="checkbox"
+                            id="s_${currentSession}_${index}_${setIndex}"
+                            ${checked ? "checked" : ""}
+                        >
+
+                        <label
+                            for="s_${currentSession}_${index}_${setIndex}"
+                        >
+                            ست ${setIndex + 1}
+                        </label>
+
+                    </div>
+                `;
+            }
+        ).join("");
+
+        card.innerHTML = `
+            ${createGifImage(ex)}
+
+            <div class="exercise-body">
+
+                <div class="exercise-title">
+
+                    <h3>${ex.name}</h3>
+
+                    <span class="complete-text">
+                        کامل شد
+                    </span>
+
+                </div>
+
+                <div style="
+                    color:#7890a8;
+                    font-size:10px;
+                    margin-bottom:10px;
+                ">
+                    ${ex.sets} ست × ${ex.reps}
+                </div>
+
+                <div class="sets">
+                    ${setsHTML}
+                </div>
+
+            </div>
+        `;
+
+        card.querySelectorAll('input[type="checkbox"]')
+        .forEach((checkbox,setIndex)=>{
+
+            checkbox.addEventListener("change",()=>{
+
+                const state = getState(
+                    currentSession,
+                    index
+                );
+
+                if(checkbox.checked){
+
+                    if(!state.includes(setIndex)){
+                        state.push(setIndex);
+                    }
+
+                }else{
+
+                    const position =
+                        state.indexOf(setIndex);
+
+                    if(position !== -1){
+                        state.splice(position,1);
+                    }
+                }
+
+                state.sort((a,b)=>a-b);
+
+                saveState(
+                    currentSession,
+                    index,
+                    state
+                );
+
+                updateExercise(
+                    index,
+                    card
+                );
+
+                updateOverall();
+                updateSessionProgress(currentSession);
+            });
+
+        });
+
+        list.appendChild(card);
 
     });
 
-
     updateOverall();
-
+    updateSessionProgress(currentSession);
 }
 
+function updateExercise(index,card){
 
-/* =========================================================
-   UPDATE EXERCISE
-========================================================= */
+    const ex = workouts[currentSession].exercises[index];
 
-function updateExercise(
-    index,
-    card
-){
-
-    const inputs =
-        card.querySelectorAll(
-            'input[type="checkbox"]'
-        );
-
-    const completed = [];
-
-
-    inputs.forEach(
-        (input,i)=>{
-
-            if(input.checked){
-
-                completed.push(i);
-
-            }
-
-        }
-    );
-
-
-    saveState(
+    const state = getState(
         currentSession,
-        index,
-        completed
+        index
     );
 
-
-    const total =
-        workouts[currentSession]
-        .exercises[index]
-        .sets;
-
-
-    if(
-        completed.length === total
-    ){
-
-        card.classList.add(
-            "completed"
-        );
-
+    if(state.length === ex.sets){
+        card.classList.add("completed");
     }else{
-
-        card.classList.remove(
-            "completed"
-        );
-
+        card.classList.remove("completed");
     }
-
-
-    updateOverall();
-
 }
-
-
-/* =========================================================
-   OVERALL
-========================================================= */
 
 function updateOverall(){
 
-    const exercises =
-        workouts[currentSession]
-        .exercises;
+    const workout = workouts[currentSession];
 
     let totalSets = 0;
-
     let doneSets = 0;
 
+    workout.exercises.forEach((ex,index)=>{
 
-    exercises.forEach(
-        (ex,index)=>{
+        totalSets += ex.sets;
 
-            totalSets += ex.sets;
+        doneSets += getState(
+            currentSession,
+            index
+        ).length;
+    });
 
-            doneSets +=
-                getState(
-                    currentSession,
-                    index
-                ).length;
+    const percent = totalSets
+        ? Math.round((doneSets / totalSets) * 100)
+        : 0;
 
-        }
-    );
+    document.getElementById("sessionPercent")
+        .textContent = `${percent}%`;
 
-
-    const percent =
-        totalSets === 0
-        ? 0
-        : Math.round(
-            doneSets /
-            totalSets *
-            100
-        );
-
-
-    document
-    .getElementById(
-        "overallBar"
-    )
-    .style.width =
-        percent + "%";
-
-
-    document
-    .getElementById(
-        "overallText"
-    )
-    .textContent =
-        percent + "%";
-
+    document.getElementById("sessionProgressBar")
+        .style.width = `${percent}%`;
 
     const finish =
-        document.getElementById(
-            "finish"
-        );
-
+        document.getElementById("finish");
 
     if(percent === 100){
-
-        finish.classList.add(
-            "show"
-        );
-
+        finish.classList.add("show");
     }else{
-
-        finish.classList.remove(
-            "show"
-        );
-
+        finish.classList.remove("show");
     }
-
-
-    updateSessionProgress(
-        currentSession
-    );
-
 }
-
-
-/* =========================================================
-   SESSION PROGRESS
-========================================================= */
 
 function updateSessionProgress(id){
 
-    const exercises =
-        workouts[id].exercises;
+    const workout = workouts[id];
 
-    let total = 0;
+    let totalSets = 0;
+    let doneSets = 0;
 
-    let done = 0;
+    workout.exercises.forEach((ex,index)=>{
 
+        totalSets += ex.sets;
 
-    exercises.forEach(
-        (ex,index)=>{
+        doneSets += getState(
+            id,
+            index
+        ).length;
+    });
 
-            total += ex.sets;
-
-            done +=
-                getState(
-                    id,
-                    index
-                ).length;
-
-        }
-    );
-
-
-    const percent =
-        total
-        ? Math.round(
-            done /
-            total *
-            100
-        )
+    return totalSets
+        ? Math.round((doneSets / totalSets) * 100)
         : 0;
-
-
-    const bar =
-        document.getElementById(
-            `sessionProgress${id}`
-        );
-
-
-    if(bar){
-
-        bar.style.width =
-            percent + "%";
-
-    }
-
 }
-
-
-/* =========================================================
-   HOME
-========================================================= */
 
 function goHome(){
 
-    document
-    .getElementById(
-        "workout"
-    )
-    .classList.add(
-        "hidden"
-    );
+    document.getElementById("workout")
+        .classList.add("hidden");
 
-
-    document
-    .getElementById(
-        "home"
-    )
-    .classList.remove(
-        "hidden"
-    );
-
+    document.getElementById("home")
+        .classList.remove("hidden");
 
     renderHome();
-
 
     window.scrollTo({
         top:0,
         behavior:"smooth"
     });
-
 }
-
-
-/* =========================================================
-   RESET CURRENT SESSION
-========================================================= */
 
 function resetCurrentSession(){
 
-    const exercises =
-        workouts[currentSession]
-        .exercises;
-
-
-    exercises.forEach(
-        (ex,index)=>{
-
-            localStorage.removeItem(
-                `neongym_${currentSession}_${index}`
-            );
-
-        }
-    );
-
+    workouts[currentSession].exercises
+    .forEach((_,index)=>{
+        localStorage.removeItem(
+            `neongym_${currentSession}_${index}`
+        );
+    });
 
     renderExercises();
-
 }
 
-
-/* =========================================================
-   START
-========================================================= */
-
 renderHome();
-
 </script>
 
 </body>
-</html>
-
+    </html>
