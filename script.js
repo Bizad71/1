@@ -6,6 +6,7 @@
   const HANDLE_STORE = "handles";
   let directoryHandle = null;
   let folderReady = false;
+  let cacheOnlyMode = false;
   let writeQueue = Promise.resolve();
   const LOGIN_USER = "bizad";
   const LOGIN_PASS = "1234";
@@ -66,12 +67,17 @@
     }
     db={products:Array.isArray(products)?products:[],invoices:Array.isArray(invoices)?invoices:[],movements:Array.isArray(movements)?movements:[],settings:settings&&typeof settings==="object"?settings:{vipLocal:false}};
     folderReady=true;
+    cacheOnlyMode=false;
+    localStorage.setItem(DB_KEY,JSON.stringify(db));
+    localStorage.removeItem("biza_lite_cache_dirty");
     await persistFiles();
     setConnection("ok","پوشه دیتابیس متصل است");
     return true;
   }
   async function persistFiles() {
-    if(!directoryHandle||!folderReady) throw new Error("پوشه دیتابیس متصل نیست");
+    // Keep a recovery copy so Android/browser reloads or scanner round-trips do not lock the app out.
+    localStorage.setItem(DB_KEY,JSON.stringify(db));
+    if(!directoryHandle||cacheOnlyMode) return;
     await writeJsonFile("biza-products.json",db.products);
     await writeJsonFile("biza-invoices.json",db.invoices);
     await writeJsonFile("biza-stock-movements.json",db.movements);
@@ -79,9 +85,11 @@
   }
   function loadDb() { return folderReady; }
   function saveDb() {
-    if(!folderReady||!directoryHandle){setConnection("bad","دیتابیس متصل نیست");toast("اول پوشه دیتابیس را وصل کن؛ اطلاعات ذخیره نشد.");return false;}
+    if(!folderReady){setConnection("bad","دیتابیس بارگذاری نشده است");toast("اطلاعات بارگذاری نشده؛ صفحه را دوباره باز کن.");return false;}
+    localStorage.setItem(DB_KEY,JSON.stringify(db));
+    if(cacheOnlyMode||!directoryHandle){localStorage.setItem("biza_lite_cache_dirty","yes");setConnection("bad","ذخیره محلی فعال است؛ پوشه فعلاً اجازه دسترسی نداده");toast("تغییرات در حافظه مرورگر ذخیره شد؛ برای همگام‌سازی فایل‌های پوشه، اتصال پوشه را بزن.");return true;}
     setConnection("ok","در حال ذخیره اطلاعات…");
-    writeQueue=writeQueue.then(()=>persistFiles()).then(()=>{setConnection("ok","پوشه دیتابیس متصل است");}).catch(err=>{setConnection("bad","خطا در ذخیره دیتابیس");toast("ذخیره فایل ناموفق بود. فضای گوشی و اجازه پوشه را بررسی کن.");console.error(err);});
+    writeQueue=writeQueue.then(()=>persistFiles()).then(()=>{setConnection("ok","پوشه دیتابیس متصل است");}).catch(err=>{cacheOnlyMode=true;localStorage.setItem(DB_KEY,JSON.stringify(db));setConnection("bad","ذخیره محلی؛ دسترسی پوشه موقتاً قطع شد");toast("اجازه پوشه موقتاً قطع شد؛ تغییرات در مرورگر نگه داشته شد.");console.error(err);});
     return true;
   }
   async function connectFolder(pickNew=false) {
@@ -92,8 +100,16 @@
       if(handle){let perm=await handle.queryPermission({mode:"readwrite"});if(perm!=="granted")perm=await handle.requestPermission({mode:"readwrite"});if(perm!=="granted")handle=null;}
       if(!handle) handle=await window.showDirectoryPicker({mode:"readwrite"});
       directoryHandle=handle; await storeHandle(handle);
-      const ok=await loadFolderData();
-      if(ok){toast("پوشه دیتابیس وصل شد.");if(loggedIn())showApp();}
+      let ok=false;
+      if(cacheOnlyMode){
+        // The browser cache is the recovery copy from the last visit; sync it into the chosen folder.
+        const perm=await directoryHandle.queryPermission({mode:"readwrite"});
+        if(perm==="granted"){
+          folderReady=true; cacheOnlyMode=false; await persistFiles();
+          setConnection("ok","پوشه دیتابیس متصل است"); ok=true;
+        }
+      } else ok=await loadFolderData();
+      if(ok){toast("پوشه دیتابیس وصل و همگام شد.");if(loggedIn())showApp();}
       return ok;
     } catch(err){if(err.name!=="AbortError") {console.error(err);toast("اتصال پوشه انجام نشد؛ اجازه دسترسی را بررسی کن.");}return false;}
   }
@@ -295,9 +311,28 @@
   window.addEventListener("storage",()=>{if(loadDb()&&loggedIn())renderAll();});
   window.addEventListener("focus",()=>{if(loadDb()&&loggedIn())renderAll();});
   (async()=>{
+    // Restore the remembered login and recovery data first. Permission prompts cannot reliably be
+    // requested on page load on Android, especially after returning from Binary Eye.
+    let cached=null;
+    try { cached=JSON.parse(localStorage.getItem(DB_KEY)||"null"); } catch {}
+    if(cached&&typeof cached==="object"){
+      db={products:Array.isArray(cached.products)?cached.products:[],invoices:Array.isArray(cached.invoices)?cached.invoices:[],movements:Array.isArray(cached.movements)?cached.movements:[],settings:cached.settings&&typeof cached.settings==="object"?cached.settings:{vipLocal:false}};
+      folderReady=true; cacheOnlyMode=true;
+    }
+    try {
+      directoryHandle=await getStoredHandle();
+      if(directoryHandle){
+        const perm=await directoryHandle.queryPermission({mode:"readwrite"});
+        if(perm==="granted" && folderReady && localStorage.getItem("biza_lite_cache_dirty")==="yes"){
+          cacheOnlyMode=false; await persistFiles(); localStorage.removeItem("biza_lite_cache_dirty");
+          setConnection("ok","پوشه دیتابیس متصل و اطلاعات همگام شد");
+        } else if(perm==="granted") await loadFolderData();
+        else if(folderReady) setConnection("bad","اطلاعات بازیابی شد؛ برای همگام‌سازی پوشه، دکمه اتصال را بزن");
+        else setConnection("bad","پوشه دیتابیس را یک‌بار وصل کن");
+      }
+    } catch(err){console.warn("Folder handle not available",err);}
+    if(loggedIn()&&folderReady) showApp(); else showLogin();
+    // Process scan result only after the app/login state and stored data are restored.
     processScanReturn();
-    try { directoryHandle=await getStoredHandle(); if(directoryHandle){const perm=await directoryHandle.queryPermission({mode:"readwrite"});if(perm==="granted")await loadFolderData();else setConnection("bad","برای دسترسی، اتصال پوشه را بزن");} }
-    catch(err){console.warn("Folder handle not available",err);}
-    if(loggedIn()&&folderReady)showApp();else if(loggedIn()&&!folderReady){showLogin();toast("برای دسترسی به اطلاعات، یک‌بار پوشه دیتابیس را وصل کن.");}else showLogin();
   })();
 })();
