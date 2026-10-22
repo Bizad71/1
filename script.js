@@ -2,6 +2,11 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const DB_KEY = "biza_lite_db_v1";
+  const HANDLE_DB = "biza_lite_handles";
+  const HANDLE_STORE = "handles";
+  let directoryHandle = null;
+  let folderReady = false;
+  let writeQueue = Promise.resolve();
   const LOGIN_USER = "bizad";
   const LOGIN_PASS = "1234";
   let db = { products: [], invoices: [], movements: [], settings: { vipLocal: false } };
@@ -22,32 +27,77 @@
     $("dbDot").className = "dot " + (state === "ok" ? "ok" : state === "bad" ? "bad" : "");
     $("dbStatus").textContent = message;
   }
-  function loadDb() {
-    try {
-      const raw = localStorage.getItem(DB_KEY);
-      if (raw) {
-        const parsed=JSON.parse(raw);
-        db={products:Array.isArray(parsed.products)?parsed.products:[],invoices:Array.isArray(parsed.invoices)?parsed.invoices:[],movements:Array.isArray(parsed.movements)?parsed.movements:[],settings:parsed.settings||{vipLocal:false}};
-      }
-      setConnection("ok","دیتابیس محلی متصل است");
-      return true;
-    } catch (err) {
-      setConnection("bad","دیتابیس متصل نیست");
-      return false;
-    }
+  function openHandleDb() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(HANDLE_DB, 1);
+      req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(HANDLE_STORE)) req.result.createObjectStore(HANDLE_STORE); };
+      req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
+    });
   }
+  async function storeHandle(handle) {
+    const idb = await openHandleDb();
+    await new Promise((resolve, reject) => { const tx=idb.transaction(HANDLE_STORE,"readwrite"); tx.objectStore(HANDLE_STORE).put(handle,"directory"); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); });
+    idb.close();
+  }
+  async function getStoredHandle() {
+    const idb = await openHandleDb();
+    const handle = await new Promise((resolve, reject) => { const req=idb.transaction(HANDLE_STORE,"readonly").objectStore(HANDLE_STORE).get("directory"); req.onsuccess=()=>resolve(req.result||null); req.onerror=()=>reject(req.error); });
+    idb.close(); return handle;
+  }
+  async function readJsonFile(name, fallback) {
+    try { const handle=await directoryHandle.getFileHandle(name); const file=await handle.getFile(); return JSON.parse(await file.text()); }
+    catch (err) { if (err.name === "NotFoundError") return fallback; throw err; }
+  }
+  async function writeJsonFile(name, data) {
+    const handle=await directoryHandle.getFileHandle(name,{create:true});
+    const writable=await handle.createWritable(); await writable.write(JSON.stringify(data,null,2)); await writable.close();
+  }
+  async function loadFolderData() {
+    if (!directoryHandle) return false;
+    const permission=await directoryHandle.queryPermission({mode:"readwrite"});
+    if(permission!=="granted"){folderReady=false;setConnection("bad","برای دسترسی، اتصال پوشه را بزن");return false;}
+    let products=await readJsonFile("biza-products.json",null);
+    let invoices=await readJsonFile("biza-invoices.json",null);
+    let movements=await readJsonFile("biza-stock-movements.json",null);
+    let settings=await readJsonFile("biza-settings.json",null);
+    // Migrate existing data from the previous localStorage-based build instead of silently starting empty.
+    if(products===null&&invoices===null&&movements===null){
+      try{const old=JSON.parse(localStorage.getItem(DB_KEY)||"null");if(old){products=old.products||[];invoices=old.invoices||[];movements=old.movements||[];settings=old.settings||{vipLocal:false};}}catch{}
+    }
+    db={products:Array.isArray(products)?products:[],invoices:Array.isArray(invoices)?invoices:[],movements:Array.isArray(movements)?movements:[],settings:settings&&typeof settings==="object"?settings:{vipLocal:false}};
+    folderReady=true;
+    await persistFiles();
+    setConnection("ok","پوشه دیتابیس متصل است");
+    return true;
+  }
+  async function persistFiles() {
+    if(!directoryHandle||!folderReady) throw new Error("پوشه دیتابیس متصل نیست");
+    await writeJsonFile("biza-products.json",db.products);
+    await writeJsonFile("biza-invoices.json",db.invoices);
+    await writeJsonFile("biza-stock-movements.json",db.movements);
+    await writeJsonFile("biza-settings.json",db.settings);
+  }
+  function loadDb() { return folderReady; }
   function saveDb() {
-    try {
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-      setConnection("ok","دیتابیس محلی متصل است");
-      return true;
-    } catch (err) {
-      setConnection("bad","دیتابیس متصل نیست");
-      toast("ذخیره اطلاعات انجام نشد؛ فضای ذخیره‌سازی را بررسی کن.");
-      return false;
-    }
+    if(!folderReady||!directoryHandle){setConnection("bad","دیتابیس متصل نیست");toast("اول پوشه دیتابیس را وصل کن؛ اطلاعات ذخیره نشد.");return false;}
+    setConnection("ok","در حال ذخیره اطلاعات…");
+    writeQueue=writeQueue.then(()=>persistFiles()).then(()=>{setConnection("ok","پوشه دیتابیس متصل است");}).catch(err=>{setConnection("bad","خطا در ذخیره دیتابیس");toast("ذخیره فایل ناموفق بود. فضای گوشی و اجازه پوشه را بررسی کن.");console.error(err);});
+    return true;
   }
-  function loggedIn() { return sessionStorage.getItem("biza_lite_logged_in") === "yes"; }
+  async function connectFolder(pickNew=false) {
+    try {
+      if(!window.showDirectoryPicker){toast("این مرورگر اتصال مستقیم پوشه را پشتیبانی نمی‌کند. سایت را در Chrome و با HTTPS باز کن.");return false;}
+      let handle=null;
+      if(!pickNew) { try { handle=await getStoredHandle(); } catch {} }
+      if(handle){let perm=await handle.queryPermission({mode:"readwrite"});if(perm!=="granted")perm=await handle.requestPermission({mode:"readwrite"});if(perm!=="granted")handle=null;}
+      if(!handle) handle=await window.showDirectoryPicker({mode:"readwrite"});
+      directoryHandle=handle; await storeHandle(handle);
+      const ok=await loadFolderData();
+      if(ok){toast("پوشه دیتابیس وصل شد.");if(loggedIn())showApp();}
+      return ok;
+    } catch(err){if(err.name!=="AbortError") {console.error(err);toast("اتصال پوشه انجام نشد؛ اجازه دسترسی را بررسی کن.");}return false;}
+  }
+  function loggedIn() { return localStorage.getItem("biza_lite_logged_in") === "yes"; }
   function showApp() {
     $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("logoutBtn").classList.remove("hidden");
     renderAll();
@@ -99,7 +149,7 @@
     $("cartCount").textContent=cart.reduce((s,x)=>s+x.quantity,0).toLocaleString("fa-IR")+" قلم";
     $("cartTotal").textContent=money(cart.reduce((s,x)=>s+x.quantity*x.salePrice,0))+" تومان";
     $("cartItems").classList.toggle("empty-state",!cart.length);
-    $("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cart-row"><div><b>${escapeHtml(x.name)}</b><small>${money(x.salePrice)} تومان · هر عدد</small></div><input type="number" min="1" step="1" value="${x.quantity}" data-cart-qty="${x.productId}" aria-label="تعداد ${escapeHtml(x.name)}"><button class="cart-remove" data-cart-remove="${x.productId}" aria-label="حذف">×</button></div>`).join(""):'هنوز کالایی اضافه نشده.';
+    $("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cart-row"><div><b>${escapeHtml(x.name)}</b><small>${money(x.salePrice)} تومان · هر عدد</small></div><div class="qty-control"><button type="button" data-cart-step="${x.productId}" data-delta="-1" aria-label="کم کردن تعداد">−</button><input type="number" min="1" step="1" value="${x.quantity}" data-cart-qty="${x.productId}" aria-label="تعداد ${escapeHtml(x.name)}"><button type="button" data-cart-step="${x.productId}" data-delta="1" aria-label="زیاد کردن تعداد">+</button></div><button class="cart-remove" data-cart-remove="${x.productId}" aria-label="حذف">×</button></div>`).join(""):'هنوز کالایی اضافه نشده.';
   }
   function addToCart(product, quantity) {
     quantity=Math.floor(num(quantity));
@@ -138,16 +188,23 @@
     $("vipLocalStatus").textContent=db.settings.vipLocal?"فعال در همین مرورگر":"محلی";
   }
   function requestExternalScanner(target) {
-    // Websites cannot force-launch an arbitrary installed scanner. Offer the Android intent where supported,
-    // and keep the field ready for the scanner's "share/keyboard" return workflow.
-    const barcodeInput=target==="sale"?$("saleLookup"):$("barcode");
-    barcodeInput.focus();
-    barcodeInput.dataset.scanTarget=target;
-    toast("اسکنر را باز کن و خروجی بارکد را به این صفحه برگردان یا در کادر وارد کن.");
-    const intent='intent://scan/#Intent;scheme=zxing;package=de.markusfisch.android.binaryeye;end';
-    const link=document.createElement("a"); link.href=intent; link.style.display="none"; document.body.appendChild(link);
-    try { link.click(); } catch {}
-    setTimeout(()=>{ try{link.remove();}catch{} },500);
+    const input=target==="sale"?$("saleLookup"):$("barcode");
+    sessionStorage.setItem("biza_scan_target",target);
+    input.dataset.scanTarget=target;
+    const returnUrl=location.origin+location.pathname+"?biza_scan_target="+encodeURIComponent(target)+"&result={RESULT}";
+    const scannerUrl="https://markusfisch.de/BinaryEye?ret="+encodeURIComponent(returnUrl);
+    if(location.protocol==="file:"){toast("برای برگشت خودکار بارکد، سایت باید روی HTTPS اجرا شود.");return;}
+    location.href=scannerUrl;
+  }
+  function processScanReturn(){
+    const url=new URL(location.href); const result=url.searchParams.get("result");
+    const target=url.searchParams.get("biza_scan_target")||sessionStorage.getItem("biza_scan_target")||"inventory";
+    if(!result)return;
+    const input=target==="sale"?$("saleLookup") : $("barcode");
+    input.value=result; input.focus(); sessionStorage.removeItem("biza_scan_target");
+    url.searchParams.delete("result");url.searchParams.delete("biza_scan_target");history.replaceState({},"",url.pathname+url.search+url.hash);
+    if(target==="sale") { showMatches(result.toLowerCase()); }
+    toast("بارکد برگشت داده شد.");
   }
   function exportBackup() {
     const blob=new Blob([JSON.stringify({format:"BIZA-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
@@ -155,14 +212,16 @@
     toast("درخواست خروجی بکاپ انجام شد.");
   }
 
-  $("loginForm").addEventListener("submit",e=>{
+  $("loginForm").addEventListener("submit",async e=>{
     e.preventDefault();
     if($("username").value.trim()===LOGIN_USER && $("password").value===LOGIN_PASS){
-      sessionStorage.setItem("biza_lite_logged_in","yes"); $("loginError").classList.add("hidden");
-      if(loadDb()) showApp(); else toast("دیتابیس متصل نیست.");
+      localStorage.setItem("biza_lite_logged_in","yes"); $("loginError").classList.add("hidden");
+      if(!folderReady){const ok=await connectFolder(false);if(!ok){toast("برای ادامه، پوشه دیتابیس را وصل کن.");return;}}
+      showApp();
     } else $("loginError").classList.remove("hidden");
   });
-  $("logoutBtn").addEventListener("click",()=>{sessionStorage.removeItem("biza_lite_logged_in");showLogin();});
+  $("logoutBtn").addEventListener("click",()=>{localStorage.removeItem("biza_lite_logged_in");showLogin();});
+  $("connectFolderBtn").addEventListener("click",()=>connectFolder(true));
   document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>goPage(b.dataset.page)));
   document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>goPage(b.dataset.go)));
   $("openVip").addEventListener("click",()=>goPage("vip"));
@@ -206,11 +265,18 @@
   $("cartItems").addEventListener("change",e=>{
     const input=e.target.closest("[data-cart-qty]");if(!input)return;
     const item=cart.find(x=>x.productId===input.dataset.cartQty), p=db.products.find(x=>x.id===input.dataset.cartQty);if(!item||!p)return;
-    const qty=Math.floor(num(input.value));const other=cart.filter(x=>x.productId!==item.productId).reduce((s,x)=>s+x.quantity,0);
+    const qty=Math.floor(num(input.value));
     if(qty<1||qty>num(p.quantity)){toast("تعداد معتبر نیست یا از موجودی بیشتر است.");renderCart();return;}
     item.quantity=qty;renderCart();
   });
-  $("cartItems").addEventListener("click",e=>{const b=e.target.closest("[data-cart-remove]");if(!b)return;cart=cart.filter(x=>x.productId!==b.dataset.cartRemove);renderCart();});
+  $("cartItems").addEventListener("click",e=>{
+    const b=e.target.closest("[data-cart-remove]");if(b){cart=cart.filter(x=>x.productId!==b.dataset.cartRemove);renderCart();return;}
+    const step=e.target.closest("[data-cart-step]");if(!step)return;
+    const id=step.dataset.cartStep, item=cart.find(x=>x.productId===id), p=db.products.find(x=>x.id===id);if(!item||!p)return;
+    const next=item.quantity+Number(step.dataset.delta);
+    if(next<1){cart=cart.filter(x=>x.productId!==id);}else if(next>num(p.quantity)){toast("موجودی کافی نیست.");return;}else item.quantity=next;
+    renderCart();
+  });
   $("clearCartBtn").addEventListener("click",()=>{cart=[];renderCart();});
   $("checkoutBtn").addEventListener("click",()=>{
     if(!cart.length){toast("فاکتور خالی است.");return;}
@@ -227,7 +293,11 @@
   // Enter on the barcode field triggers lookup when used in the sales form.
   $("saleLookup").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("addToCartForm").requestSubmit();}});
   window.addEventListener("storage",()=>{if(loadDb()&&loggedIn())renderAll();});
-  window.addEventListener("focus",()=>{try{if(loadDb()&&loggedIn())renderAll();}catch{}});
-  loadDb();
-  if(loggedIn())showApp();else showLogin();
+  window.addEventListener("focus",()=>{if(loadDb()&&loggedIn())renderAll();});
+  (async()=>{
+    processScanReturn();
+    try { directoryHandle=await getStoredHandle(); if(directoryHandle){const perm=await directoryHandle.queryPermission({mode:"readwrite"});if(perm==="granted")await loadFolderData();else setConnection("bad","برای دسترسی، اتصال پوشه را بزن");} }
+    catch(err){console.warn("Folder handle not available",err);}
+    if(loggedIn()&&folderReady)showApp();else if(loggedIn()&&!folderReady){showLogin();toast("برای دسترسی به اطلاعات، یک‌بار پوشه دیتابیس را وصل کن.");}else showLogin();
+  })();
 })();

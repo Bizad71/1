@@ -11,7 +11,7 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="brand"><div class="brand-mark">B</div><div><strong>BIZA</strong><small>مدیریت هوشمند فروشگاه</small></div></div>
-      <div class="connection"><span id="dbDot" class="dot"></span><span id="dbStatus">دیتابیس محلی آماده بررسی</span></div>
+      <button id="connectFolderBtn" class="connection connection-button" type="button" title="اتصال پوشه دیتابیس"><span id="dbDot" class="dot"></span><span id="dbStatus">دیتابیس متصل نیست</span><span class="connect-label">اتصال پوشه</span></button>
       <button id="logoutBtn" class="icon-btn hidden" aria-label="خروج" title="خروج">↪</button>
     </header>
 
@@ -27,15 +27,15 @@
         <form id="loginForm" class="login-card">
           <div class="card-icon">↗</div><h2>ورود به BIZA</h2><p class="muted">برای ادامه وارد حساب مدیریت شو.</p>
           <label for="username">نام کاربری</label><input id="username" autocomplete="username" value="bizad" required>
-          <label for="password">رمز عبور</label><input id="password" type="password" autocomplete="current-password" placeholder="رمز عبور" required>
+          <label for="password">رمز عبور</label><input id="password" type="password" autocomplete="current-password" value="1234" placeholder="رمز عبور" required>
           <p id="loginError" class="error hidden">نام کاربری یا رمز عبور اشتباه است.</p>
           <button class="primary-btn full" type="submit">ورود به پنل <span>←</span></button>
-          <small class="security-note">نسخه آزمایشی محلی · اطلاعات این نسخه روی همین مرورگر ذخیره می‌شود.</small>
+          <small class="security-note">پس از ورود، یک پوشه در گوشی انتخاب کن؛ اطلاعات کالاها و فاکتورها در فایل‌های همان پوشه ذخیره می‌شوند.</small>
         </form>
       </section>
 
       <section id="appView" class="hidden">
-        <div class="welcome-row"><div><span class="eyebrow">پنل مدیریت</span><h1>سلام، بهزاد <span class="wave">✦</span></h1><p class="muted">وضعیت فروشگاهت را یک‌جا ببین.</p></div><button id="backupBtn" class="outline-btn">خروجی / بکاپ</button></div>
+        <div class="welcome-row"><div><span class="eyebrow">پنل مدیریت فروشگاه</span><h1>خلاصه وضعیت فروشگاه</h1><p class="muted">مدیریت کالاها، فروش و گزارش‌های عملکرد.</p></div><button id="backupBtn" class="outline-btn">خروجی / بکاپ</button></div>
         <nav class="main-nav" aria-label="منوی اصلی">
           <button class="nav-btn active" data-page="home"><span>⌂</span> خانه</button>
           <button class="nav-btn" data-page="inventory"><span>▦</span> انبار</button>
@@ -64,7 +64,7 @@
             <div class="panel-heading"><div><h3 id="productFormTitle">ثبت کالای جدید</h3><p class="muted">بارکدخوان خارجی را باز کن و بارکد را در کادر وارد کن.</p></div></div>
             <form id="productForm" class="form-grid">
               <input type="hidden" id="productId">
-              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">بازکردن اسکنر</button></div><small class="hint">در صورت پشتیبانی گوشی، Binary Eye یا اسکنر نصب‌شده را انتخاب کن؛ سپس بارکد را اینجا وارد کن.</small></div>
+              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">بازکردن اسکنر</button></div><small class="hint">اسکنر Binary Eye باز می‌شود و در صورت اجرای سایت با HTTPS، نتیجه اسکن به همین کادر برمی‌گردد.</small></div>
               <div class="field"><label for="productName">نام کالا</label><input id="productName" placeholder="مثلاً نوشابه خانواده" required></div>
               <div class="field"><label for="purchasePrice">قیمت خرید (تومان)</label><input id="purchasePrice" type="number" min="0" step="any" placeholder="۰" required></div>
               <div class="field"><label for="salePrice">قیمت فروش (تومان)</label><input id="salePrice" type="number" min="0" step="any" placeholder="۰" required></div>
