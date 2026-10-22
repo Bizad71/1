@@ -17,6 +17,8 @@
   const num = v => Number(v || 0);
   const money = v => Math.round(num(v)).toLocaleString("fa-IR");
   const digits = v => String(v).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  // Treat visually identical barcodes as the same value (Persian/Arabic digits and whitespace normalized).
+  const normalizeBarcode = v => digits(String(v ?? "")).trim().replace(/\s+/g, "").toLowerCase();
   const todayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
   const dateFa = value => { try { return new Date(value).toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"}); } catch { return value; } };
   const escapeHtml = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -151,7 +153,27 @@
   }
   function invoiceTableHtml(items) {
     if(!items.length) return '<div class="table-empty">هنوز فاکتوری ثبت نشده است.</div>';
-    return `<table><thead><tr><th>شماره فاکتور</th><th>تاریخ</th><th>تعداد اقلام</th><th>مبلغ کل</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml(i.number)}</td><td>${dateFa(i.createdAt)}</td><td>${i.items.reduce((s,x)=>s+num(x.quantity),0).toLocaleString("fa-IR")}</td><td>${money(i.total)} تومان</td></tr>`).join("")}</tbody></table>`;
+    return `<table><thead><tr><th>شماره فاکتور</th><th>تاریخ</th><th>تعداد اقلام</th><th>مبلغ کل</th><th>عملیات</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml(i.number)}</td><td>${dateFa(i.createdAt)}</td><td>${(i.items||[]).reduce((s,x)=>s+num(x.quantity),0).toLocaleString("fa-IR")}</td><td>${money(i.total)} تومان</td><td><button class="table-action" data-view-invoice="${escapeHtml(i.id)}">مشاهده</button><button class="table-action" data-print-invoice="${escapeHtml(i.id)}">چاپ / PDF</button></td></tr>`).join("")}</tbody></table>`;
+  }
+  function invoiceMarkup(invoice) {
+    const rows=(invoice.items||[]).map((item,index)=>`<tr><td>${index+1}</td><td>${escapeHtml(item.name||"کالا")}</td><td>${escapeHtml(item.barcode||"—")}</td><td>${num(item.quantity).toLocaleString("fa-IR")}</td><td>${money(item.salePrice)} تومان</td><td>${money(num(item.quantity)*num(item.salePrice))} تومان</td></tr>`).join("");
+    return `<div class="invoice-paper"><div class="invoice-head"><div><h2>بیزا مارکت</h2><p>فاکتور فروش</p></div><div><b>${escapeHtml(invoice.number||"—")}</b><p>${escapeHtml(dateFa(invoice.createdAt))}</p></div></div><table class="invoice-lines"><thead><tr><th>ردیف</th><th>شرح کالا</th><th>بارکد</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>${rows}</tbody></table><div class="invoice-grand-total">مبلغ کل: <strong>${money(invoice.total)} تومان</strong></div><p class="invoice-thanks">با تشکر از خرید شما</p></div>`;
+  }
+  function viewInvoice(id) {
+    const invoice=db.invoices.find(i=>i.id===id); if(!invoice) return;
+    $("invoiceModalBody").innerHTML=invoiceMarkup(invoice);
+    $("invoiceModal").classList.remove("hidden");
+    $("invoiceModal").setAttribute("aria-hidden","false");
+    $("invoiceModalPrint").onclick=()=>printInvoice(id);
+  }
+  function closeInvoiceModal() { $("invoiceModal").classList.add("hidden"); $("invoiceModal").setAttribute("aria-hidden","true"); }
+  function printInvoice(id) {
+    const invoice=db.invoices.find(i=>i.id===id); if(!invoice) return;
+    const win=window.open("", "_blank");
+    if(!win){toast("مرورگر پنجره چاپ را مسدود کرد؛ اجازه بازشدن پنجره را بده.");return;}
+    win.document.open();
+    win.document.write(`<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فاکتور ${escapeHtml(invoice.number)}</title><style>body{font-family:Tahoma,Arial,sans-serif;color:#111;margin:24px;font-size:12px}.invoice-paper{max-width:900px;margin:auto}.invoice-head{display:flex;justify-content:space-between;align-items:start;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:18px}.invoice-head h2{margin:0 0 6px}.invoice-head p{margin:4px 0}.invoice-lines{width:100%;border-collapse:collapse;margin-top:16px}.invoice-lines th,.invoice-lines td{border:1px solid #777;padding:9px;text-align:right}.invoice-lines th{background:#eee}.invoice-grand-total{margin-top:20px;border:1px solid #777;padding:12px;font-size:15px}.invoice-thanks{text-align:center;margin-top:40px}@page{size:A4;margin:14mm}@media print{body{margin:0}}</style></head><body>${invoiceMarkup(invoice)}<script>window.addEventListener('load',()=>{setTimeout(()=>window.print(),250)});<\/script></body></html>`);
+    win.document.close();
   }
   function renderInvoices() { $("invoiceTable").innerHTML=invoiceTableHtml([...db.invoices].sort((a,b)=>b.createdAt-a.createdAt)); }
   function resetProductForm() {
@@ -257,6 +279,16 @@
   document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>goPage(b.dataset.page)));
   document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>goPage(b.dataset.go)));
   $("openVip").addEventListener("click",()=>goPage("vip"));
+  function handleInvoiceActionClick(e) {
+    const view=e.target.closest("[data-view-invoice]");
+    const print=e.target.closest("[data-print-invoice]");
+    if(view) viewInvoice(view.dataset.viewInvoice);
+    if(print) printInvoice(print.dataset.printInvoice);
+  }
+  $("invoiceTable").addEventListener("click",handleInvoiceActionClick);
+  $("recentInvoices").addEventListener("click",handleInvoiceActionClick);
+  $("invoiceModalClose").addEventListener("click",closeInvoiceModal);
+  $("invoiceModal").addEventListener("click",e=>{if(e.target===$("invoiceModal"))closeInvoiceModal();});
   $("backupBtn").addEventListener("click",exportBackup);
   $("scanBtn").addEventListener("click",()=>requestExternalScanner("inventory"));
   $("externalScannerBtn").addEventListener("click",()=>requestExternalScanner("inventory"));
@@ -266,9 +298,10 @@
   $("productForm").addEventListener("submit",e=>{
     e.preventDefault();
     if(!loadDb()){toast("دیتابیس متصل نیست؛ ذخیره متوقف شد.");return;}
-    const id=$("productId").value, barcode=$("barcode").value.trim(), name=$("productName").value.trim();
-    const duplicate=db.products.find(p=>barcode&&p.barcode===barcode&&p.id!==id);
-    if(duplicate){toast("این بارکد قبلاً برای کالای دیگری ثبت شده است.");return;}
+    const id=$("productId").value, barcode=digits($("barcode").value).trim(), name=$("productName").value.trim();
+    const normalized=normalizeBarcode(barcode);
+    const duplicate=normalized ? db.products.find(p=>normalizeBarcode(p.barcode)===normalized&&p.id!==id) : null;
+    if(duplicate){toast(`این بارکد قبلاً برای کالای «${duplicate.name}» ثبت شده است. هر بارکد فقط برای یک کالا مجاز است.`);$("barcode").focus();return;}
     const product={id:id||("p_"+Date.now()+"_"+Math.random().toString(36).slice(2,7)),barcode,name,purchasePrice:num($("purchasePrice").value),salePrice:num($("salePrice").value),quantity:Math.floor(num($("quantity").value)),updatedAt:Date.now()};
     if(id){
       const old=db.products.find(p=>p.id===id); if(old&&old.quantity!==product.quantity) db.movements.push({id:"m_"+Date.now(),productId:id,type:"adjustment",delta:product.quantity-old.quantity,at:Date.now(),note:"اصلاح موجودی از فرم کالا"});
