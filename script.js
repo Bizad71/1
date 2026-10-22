@@ -125,6 +125,8 @@
     document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
     document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
     const el=$("page-"+page); if(el) el.classList.remove("hidden");
+    // Remember the current panel so refreshes and scanner round-trips return to the same section.
+    try { localStorage.setItem("biza_lite_current_page", page); } catch {}
     window.scrollTo({top:0,behavior:"smooth"});
     if(page==="vip") renderVip();
   }
@@ -205,6 +207,10 @@
   }
   function requestExternalScanner(target) {
     const input=target==="sale"?$("saleLookup"):$("barcode");
+    const page=target==="sale"?"sales":"inventory";
+    // Persist both the destination input and panel before leaving for Binary Eye.
+    localStorage.setItem("biza_scan_target",target);
+    localStorage.setItem("biza_lite_current_page",page);
     sessionStorage.setItem("biza_scan_target",target);
     input.dataset.scanTarget=target;
     const returnUrl=location.origin+location.pathname+"?biza_scan_target="+encodeURIComponent(target)+"&result={RESULT}";
@@ -213,14 +219,24 @@
     location.href=scannerUrl;
   }
   function processScanReturn(){
-    const url=new URL(location.href); const result=url.searchParams.get("result");
-    const target=url.searchParams.get("biza_scan_target")||sessionStorage.getItem("biza_scan_target")||"inventory";
-    if(!result)return;
-    const input=target==="sale"?$("saleLookup") : $("barcode");
-    input.value=result; input.focus(); sessionStorage.removeItem("biza_scan_target");
-    url.searchParams.delete("result");url.searchParams.delete("biza_scan_target");history.replaceState({},"",url.pathname+url.search+url.hash);
-    if(target==="sale") { showMatches(result.toLowerCase()); }
-    toast("بارکد برگشت داده شد.");
+    const url=new URL(location.href);
+    const result=url.searchParams.get("result");
+    const target=url.searchParams.get("biza_scan_target")||localStorage.getItem("biza_scan_target")||sessionStorage.getItem("biza_scan_target")||"inventory";
+    const page=target==="sale"?"sales":"inventory";
+    // Restore the app and exact panel before filling the barcode input.
+    if(loggedIn()) showApp();
+    goPage(page);
+    if(!result) return;
+    const input=target==="sale"?$("saleLookup"):$("barcode");
+    input.value=result;
+    input.focus({preventScroll:true});
+    localStorage.removeItem("biza_scan_target");
+    sessionStorage.removeItem("biza_scan_target");
+    url.searchParams.delete("result");
+    url.searchParams.delete("biza_scan_target");
+    history.replaceState({},"",url.pathname+url.search+url.hash);
+    if(target==="sale") showMatches(result.toLowerCase());
+    // Intentionally no toast here: the returned barcode is already visible in its field.
   }
   function exportBackup() {
     const blob=new Blob([JSON.stringify({format:"BIZA-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
@@ -331,8 +347,16 @@
         else setConnection("bad","پوشه دیتابیس را یک‌بار وصل کن");
       }
     } catch(err){console.warn("Folder handle not available",err);}
-    if(loggedIn()&&folderReady) showApp(); else showLogin();
-    // Process scan result only after the app/login state and stored data are restored.
-    processScanReturn();
+    // A successful login is remembered. A temporary folder-permission issue must never send
+    // the user back to the login screen; cached data is shown and the folder can be reconnected.
+    if(loggedIn()) {
+      showApp();
+      const urlNow=new URL(location.href);
+      const returnedTarget=urlNow.searchParams.get("biza_scan_target")||localStorage.getItem("biza_scan_target");
+      const savedPage=returnedTarget?(returnedTarget==="sale"?"sales":"inventory"):(localStorage.getItem("biza_lite_current_page")||"home");
+      goPage(["home","inventory","sales","vip"].includes(savedPage)?savedPage:"home");
+    } else showLogin();
+    // Process a scanner callback only after restoring login, cache, and panel state.
+    if(new URL(location.href).searchParams.has("result")) processScanReturn();
   })();
 })();
