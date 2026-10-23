@@ -2,6 +2,7 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const DB_KEY = "biza_lite_db_v1";
+  const CART_KEY = "biza_lite_cart_v1";
   const HANDLE_DB = "biza_lite_handles";
   const HANDLE_STORE = "handles";
   let directoryHandle = null;
@@ -11,7 +12,13 @@
   const LOGIN_USER = "bizad";
   const LOGIN_PASS = "1234";
   let db = { products: [], invoices: [], movements: [], settings: { vipLocal: false } };
-  let cart = [];
+  // Keep the in-progress invoice across the round-trip to Binary Eye, which may reload this page.
+  let cart = (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+      return Array.isArray(saved) ? saved.filter(x => x && x.productId && Number(x.quantity) > 0) : [];
+    } catch { return []; }
+  })();
   let toastTimer;
 
   const num = v => Number(v || 0);
@@ -157,7 +164,7 @@
   }
   function invoiceMarkup(invoice) {
     const rows=(invoice.items||[]).map((item,index)=>`<tr><td>${index+1}</td><td>${escapeHtml(item.name||"کالا")}</td><td>${escapeHtml(item.barcode||"—")}</td><td>${num(item.quantity).toLocaleString("fa-IR")}</td><td>${money(item.salePrice)} تومان</td><td>${money(num(item.quantity)*num(item.salePrice))} تومان</td></tr>`).join("");
-    return `<div class="invoice-paper"><div class="invoice-head"><div><h2>بیزا مارکت</h2><p>فاکتور فروش</p></div><div><b>${escapeHtml(invoice.number||"—")}</b><p>${escapeHtml(dateFa(invoice.createdAt))}</p></div></div><table class="invoice-lines"><thead><tr><th>ردیف</th><th>شرح کالا</th><th>بارکد</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>${rows}</tbody></table><div class="invoice-grand-total">مبلغ کل: <strong>${money(invoice.total)} تومان</strong></div><p class="invoice-thanks">با تشکر از خرید شما</p></div>`;
+    return `<div class="invoice-paper"><div class="invoice-head"><div><h2>Bizaap</h2><p>فاکتور فروش</p></div><div><b>${escapeHtml(invoice.number||"—")}</b><p>${escapeHtml(dateFa(invoice.createdAt))}</p></div></div><table class="invoice-lines"><thead><tr><th>ردیف</th><th>شرح کالا</th><th>بارکد</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>${rows}</tbody></table><div class="invoice-grand-total">مبلغ کل: <strong>${money(invoice.total)} تومان</strong></div><p class="invoice-thanks">با تشکر از خرید شما</p></div>`;
   }
   function viewInvoice(id) {
     const invoice=db.invoices.find(i=>i.id===id); if(!invoice) return;
@@ -186,6 +193,8 @@
     $("productForm").scrollIntoView({behavior:"smooth",block:"start"});
   }
   function renderCart() {
+    // Persist every cart change before the user switches to the external scanner.
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (err) { console.warn("Could not persist invoice draft", err); }
     $("cartCount").textContent=cart.reduce((s,x)=>s+x.quantity,0).toLocaleString("fa-IR")+" قلم";
     $("cartTotal").textContent=money(cart.reduce((s,x)=>s+x.quantity*x.salePrice,0))+" تومان";
     $("cartItems").classList.toggle("empty-state",!cart.length);
@@ -261,8 +270,8 @@
     // Intentionally no toast here: the returned barcode is already visible in its field.
   }
   function exportBackup() {
-    const blob=new Blob([JSON.stringify({format:"BIZA-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`biza-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(url);
+    const blob=new Blob([JSON.stringify({format:"BIZAAP-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`bizaap-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(url);
     toast("درخواست خروجی بکاپ انجام شد.");
   }
 
@@ -349,7 +358,7 @@
     for(const item of cart){const p=db.products.find(x=>x.id===item.productId);if(!p||num(p.quantity)<item.quantity){toast(`موجودی ${item.name} کافی نیست.`);return;}}
     const items=cart.map(x=>({...x}));
     items.forEach(item=>{const p=db.products.find(x=>x.id===item.productId);p.quantity-=item.quantity;db.movements.push({id:"m_"+Date.now()+"_"+Math.random().toString(36).slice(2,5),productId:p.id,type:"sale",delta:-item.quantity,at:Date.now(),note:"فروش"});});
-    const invoice={id:"i_"+Date.now(),number:"BIZA-"+String(db.invoices.length+1).padStart(5,"0"),createdAt:Date.now(),items,total:items.reduce((s,x)=>s+x.quantity*x.salePrice,0)};
+    const invoice={id:"i_"+Date.now(),number:"BIZAAP-"+String(db.invoices.length+1).padStart(5,"0"),createdAt:Date.now(),items,total:items.reduce((s,x)=>s+x.quantity*x.salePrice,0)};
     db.invoices.push(invoice);
     if(saveDb()){cart=[];renderAll();goPage("sales");toast(`فاکتور ${invoice.number} ثبت شد.`);}
   });
