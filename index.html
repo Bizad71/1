@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#9bdcff">
-  <title>Bizaap | مدیریت فروشگاه</title>
+  <title>BIZA | مدیریت فروشگاه</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div class="brand"><div class="brand-mark">B</div><div><strong>Bizaap</strong><small>مدیریت هوشمند فروشگاه</small></div></div>
+      <div class="brand"><div class="brand-mark">B</div><div><strong>BIZA</strong><small>مدیریت هوشمند فروشگاه</small></div></div>
       <button id="connectFolderBtn" class="connection connection-button" type="button" title="اتصال پوشه دیتابیس"><span id="dbDot" class="dot"></span><span id="dbStatus">دیتابیس متصل نیست</span><span class="connect-label">اتصال پوشه</span></button>
       <button id="logoutBtn" class="icon-btn hidden" aria-label="خروج" title="خروج">↪</button>
     </header>
@@ -25,7 +25,7 @@
           <div class="feature-pills"><span>انبار</span><span>فروش</span><span>تحلیل VIP</span></div>
         </div>
         <form id="loginForm" class="login-card">
-          <div class="card-icon">↗</div><h2>ورود به Bizaap</h2><p class="muted">برای ادامه وارد حساب مدیریت شو.</p>
+          <div class="card-icon">↗</div><h2>ورود به BIZA</h2><p class="muted">برای ادامه وارد حساب مدیریت شو.</p>
           <label for="username">نام کاربری</label><input id="username" autocomplete="username" value="bizad" required>
           <label for="password">رمز عبور</label><input id="password" type="password" autocomplete="current-password" value="1234" placeholder="رمز عبور" required>
           <p id="loginError" class="error hidden">نام کاربری یا رمز عبور اشتباه است.</p>
@@ -61,10 +61,10 @@
         <section id="page-inventory" class="page hidden">
           <div class="section-heading"><div><span class="eyebrow">مدیریت کالا</span><h2>انبار</h2><p class="muted">ثبت و پیگیری کالاها و موجودی.</p></div><button id="scanBtn" class="primary-btn">▦ اسکن بارکد</button></div>
           <article class="panel">
-            <div class="panel-heading"><div><h3 id="productFormTitle">ثبت کالای جدید</h3><p class="muted">بارکد را با دوربین داخل سایت بخوان یا از اسکنر خارجی استفاده کن.</p></div></div>
+            <div class="panel-heading"><div><h3 id="productFormTitle">ثبت کالای جدید</h3><p class="muted">بارکد را اسکن کن؛ نام و مشخصات کالا را خودت وارد کن.</p></div></div>
             <form id="productForm" class="form-grid">
               <input type="hidden" id="productId">
-              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">بازکردن اسکنر</button></div><small class="hint">دکمه «اسکن بارکد» دوربین پیوسته داخل سایت را باز می‌کند. اسکنر خارجی هم به‌عنوان روش جایگزین باقی است.</small></div>
+              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">بازکردن اسکنر</button></div><small class="hint">اسکنر داخل همین صفحه باز می‌شود و شماره بارکد را وارد می‌کند.</small></div>
               <div class="field"><label for="productName">نام کالا</label><input id="productName" placeholder="مثلاً نوشابه خانواده" required></div>
               <div class="field"><label for="purchasePrice">قیمت خرید (تومان)</label><input id="purchasePrice" type="number" min="0" step="any" placeholder="۰" required></div>
               <div class="field"><label for="salePrice">قیمت فروش (تومان)</label><input id="salePrice" type="number" min="0" step="any" placeholder="۰" required></div>
@@ -87,7 +87,7 @@
         </section>
 
         <section id="page-vip" class="page hidden">
-          <div class="section-heading"><div><span class="eyebrow">BIZAAP INSIGHTS</span><h2>مدیریت و تحلیل VIP <span class="vip-star">✦</span></h2><p class="muted">تحلیل‌ها از فاکتورهای ثبت‌شده در همین دیتابیس محلی محاسبه می‌شوند.</p></div><span class="soft-badge">نسخه آزمایشی</span></div>
+          <div class="section-heading"><div><span class="eyebrow">BIZA INSIGHTS</span><h2>مدیریت و تحلیل VIP <span class="vip-star">✦</span></h2><p class="muted">تحلیل‌ها از فاکتورهای ثبت‌شده در همین دیتابیس محلی محاسبه می‌شوند.</p></div><span class="soft-badge">نسخه آزمایشی</span></div>
           <div class="vip-banner"><div><span class="eyebrow">گزارش عملکرد</span><h2>تصویر واقعی فروشگاهت</h2><p>هرچه فروش‌های بیشتری ثبت کنی، تحلیل‌ها کاربردی‌تر می‌شوند.</p></div><div class="banner-symbol">✦</div></div>
           <div class="stats-grid vip-stats"><article class="stat-card"><div class="stat-top"><span>کل فروش</span><span class="stat-icon">↗</span></div><strong id="vipRevenue">۰</strong><small>تومان</small></article><article class="stat-card"><div class="stat-top"><span>سود ناخالص تخمینی</span><span class="stat-icon">◇</span></div><strong id="vipProfit">۰</strong><small>تومان، بر اساس قیمت خرید فعلی</small></article><article class="stat-card"><div class="stat-top"><span>تعداد فاکتورها</span><span class="stat-icon">▤</span></div><strong id="vipInvoices">۰</strong><small>فاکتور ثبت‌شده</small></article><article class="stat-card"><div class="stat-top"><span>میانگین فاکتور</span><span class="stat-icon">≈</span></div><strong id="vipAverage">۰</strong><small>تومان</small></article></div>
           <div class="content-grid"><article class="panel"><div class="panel-heading"><div><h3>پرفروش‌ترین کالاها</h3><p class="muted">بر اساس تعداد فروخته‌شده</p></div></div><div id="topProducts" class="rank-list empty-state">هنوز اطلاعات کافی ثبت نشده است.</div></article><article class="panel"><div class="panel-heading"><div><h3>کم‌فروش / بدون فروش</h3><p class="muted">کالاهای بدون فروش در سوابق فعلی</p></div></div><div id="slowProducts" class="rank-list empty-state">هنوز اطلاعات کافی ثبت نشده است.</div></article></div>
@@ -96,22 +96,22 @@
         </section>
       </section>
     </main>
-    <footer><span> BIZAAP LITE </span><span>نسخه سبک مدیریت فروشگاه</span></footer>
-  </div>
-  <div id="cameraScannerModal" class="camera-scanner-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="اسکن پیوسته بارکد">
-    <div class="camera-scanner-card">
-      <div class="camera-scanner-head"><div><strong>اسکن پیوسته بارکد</strong><p id="cameraScannerStatus">دوربین در حال آماده‌سازی است…</p></div><button type="button" id="cameraScannerClose" class="outline-btn">بستن</button></div>
-      <div class="camera-video-wrap"><video id="cameraScannerVideo" autoplay muted playsinline></video><div class="camera-scan-frame" aria-hidden="true"></div></div>
-      <div class="camera-scanner-footer"><span id="cameraScanCount" class="soft-badge">۰ اسکن</span><span id="cameraLastBarcode" class="camera-last-barcode">هنوز بارکدی خوانده نشده</span></div>
-      <p class="camera-scanner-note">برای ثبت بارکد بعدی، بارکد قبلی را از جلوی دوربین بردار و بارکد بعدی را نشان بده. در بخش فروش، کالاها خودکار به فاکتور اضافه می‌شوند.</p>
-      <div class="camera-scanner-actions"><button type="button" id="cameraScannerExternal" class="outline-btn">استفاده از Binary Eye</button><button type="button" id="cameraScannerStop" class="primary-btn">توقف دوربین</button></div>
-    </div>
+    <footer><span> BIZA LITE </span><span>نسخه سبک مدیریت فروشگاه</span></footer>
   </div>
   <div id="invoiceModal" class="invoice-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="مشاهده فاکتور">
     <div class="invoice-modal-card"><div class="invoice-modal-actions"><strong>مشاهده فاکتور</strong><div><button id="invoiceModalPrint" class="primary-btn">چاپ / ذخیره PDF</button><button id="invoiceModalClose" class="outline-btn">بستن</button></div></div><div id="invoiceModalBody"></div></div>
   </div>
+  <div id="barcodeScannerModal" class="scanner-modal hidden" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
+    <div class="scanner-card">
+      <div class="scanner-head"><div><h3 id="scannerTitle">اسکن بارکد</h3><p id="scannerStatus" class="muted">دوربین را به سمت بارکد بگیر.</p></div><button type="button" id="scannerClose" class="outline-btn">بستن</button></div>
+      <video id="scannerVideo" playsinline muted></video>
+      <div class="scanner-actions"><button type="button" id="scannerRestart" class="primary-btn">اسکن دوباره</button></div>
+      <p class="hint">فقط شماره بارکد خوانده می‌شود؛ نام کالا را خودت هنگام ثبت کالا تعیین می‌کنی. برای استفاده، اجازه دسترسی دوربین را بده.</p>
+    </div>
+  </div>
   <div id="toast" class="toast" role="status"></div>
   <input id="barcodeFallback" class="visually-hidden" inputmode="numeric" aria-label="ورود بارکد">
+  <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
