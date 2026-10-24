@@ -61,10 +61,10 @@
         <section id="page-inventory" class="page hidden">
           <div class="section-heading"><div><span class="eyebrow">مدیریت کالا</span><h2>انبار</h2><p class="muted">ثبت و پیگیری کالاها و موجودی.</p></div><button id="scanBtn" class="primary-btn">▦ اسکن بارکد</button></div>
           <article class="panel">
-            <div class="panel-heading"><div><h3 id="productFormTitle">ثبت کالای جدید</h3><p class="muted">بارکدخوان خارجی را باز کن و بارکد را در کادر وارد کن.</p></div></div>
+            <div class="panel-heading"><div><h3 id="productFormTitle">ثبت کالای جدید</h3><p class="muted">بارکد را با دوربین داخل سایت بخوان یا از اسکنر خارجی استفاده کن.</p></div></div>
             <form id="productForm" class="form-grid">
               <input type="hidden" id="productId">
-              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">بازکردن اسکنر</button></div><small class="hint">اسکنر Binary Eye باز می‌شود و در صورت اجرای سایت با HTTPS، نتیجه اسکن به همین کادر برمی‌گردد.</small></div>
+              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">بازکردن اسکنر</button></div><small class="hint">دکمه «اسکن بارکد» دوربین پیوسته داخل سایت را باز می‌کند. اسکنر خارجی هم به‌عنوان روش جایگزین باقی است.</small></div>
               <div class="field"><label for="productName">نام کالا</label><input id="productName" placeholder="مثلاً نوشابه خانواده" required></div>
               <div class="field"><label for="purchasePrice">قیمت خرید (تومان)</label><input id="purchasePrice" type="number" min="0" step="any" placeholder="۰" required></div>
               <div class="field"><label for="salePrice">قیمت فروش (تومان)</label><input id="salePrice" type="number" min="0" step="any" placeholder="۰" required></div>
@@ -97,6 +97,15 @@
       </section>
     </main>
     <footer><span> BIZAAP LITE </span><span>نسخه سبک مدیریت فروشگاه</span></footer>
+  </div>
+  <div id="cameraScannerModal" class="camera-scanner-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="اسکن پیوسته بارکد">
+    <div class="camera-scanner-card">
+      <div class="camera-scanner-head"><div><strong>اسکن پیوسته بارکد</strong><p id="cameraScannerStatus">دوربین در حال آماده‌سازی است…</p></div><button type="button" id="cameraScannerClose" class="outline-btn">بستن</button></div>
+      <div class="camera-video-wrap"><video id="cameraScannerVideo" autoplay muted playsinline></video><div class="camera-scan-frame" aria-hidden="true"></div></div>
+      <div class="camera-scanner-footer"><span id="cameraScanCount" class="soft-badge">۰ اسکن</span><span id="cameraLastBarcode" class="camera-last-barcode">هنوز بارکدی خوانده نشده</span></div>
+      <p class="camera-scanner-note">برای ثبت بارکد بعدی، بارکد قبلی را از جلوی دوربین بردار و بارکد بعدی را نشان بده. در بخش فروش، کالاها خودکار به فاکتور اضافه می‌شوند.</p>
+      <div class="camera-scanner-actions"><button type="button" id="cameraScannerExternal" class="outline-btn">استفاده از Binary Eye</button><button type="button" id="cameraScannerStop" class="primary-btn">توقف دوربین</button></div>
+    </div>
   </div>
   <div id="invoiceModal" class="invoice-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="مشاهده فاکتور">
     <div class="invoice-modal-card"><div class="invoice-modal-actions"><strong>مشاهده فاکتور</strong><div><button id="invoiceModalPrint" class="primary-btn">چاپ / ذخیره PDF</button><button id="invoiceModalClose" class="outline-btn">بستن</button></div></div><div id="invoiceModalBody"></div></div>

@@ -20,6 +20,14 @@
     } catch { return []; }
   })();
   let toastTimer;
+  let cameraScanStream = null;
+  let cameraScanActive = false;
+  let cameraScanTarget = "inventory";
+  let cameraScanCount = 0;
+  let cameraLastAccepted = "";
+  let cameraNoCodeSince = 0;
+  let cameraLoopTimer = null;
+  let cameraDetector = null;
 
   const num = v => Number(v || 0);
   const money = v => Math.round(num(v)).toLocaleString("fa-IR");
@@ -236,6 +244,128 @@
     $("vipToggle").checked=!!db.settings.vipLocal;
     $("vipLocalStatus").textContent=db.settings.vipLocal?"فعال در همین مرورگر":"محلی";
   }
+  function stopCameraScanner() {
+    cameraScanActive = false;
+    if (cameraLoopTimer !== null) { clearTimeout(cameraLoopTimer); cameraLoopTimer = null; }
+    if (cameraScanStream) {
+      cameraScanStream.getTracks().forEach(track => track.stop());
+      cameraScanStream = null;
+    }
+    const video = $("cameraScannerVideo");
+    if (video) { video.pause(); video.srcObject = null; }
+    cameraDetector = null;
+    $("cameraScannerModal").classList.add("hidden");
+    $("cameraScannerModal").setAttribute("aria-hidden", "true");
+  }
+
+  async function openCameraScanner(target) {
+    cameraScanTarget = target === "sale" ? "sale" : "inventory";
+    if (location.protocol === "file:" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !("BarcodeDetector" in window)) {
+      toast("این مرورگر اسکن دوربین داخل سایت را پشتیبانی نمی‌کند؛ Binary Eye باز می‌شود.");
+      requestExternalScanner(cameraScanTarget);
+      return;
+    }
+
+    stopCameraScanner();
+    cameraScanTarget = target === "sale" ? "sale" : "inventory";
+    cameraScanCount = 0;
+    cameraLastAccepted = "";
+    cameraNoCodeSince = 0;
+    $("cameraScanCount").textContent = "۰ اسکن";
+    $("cameraLastBarcode").textContent = "هنوز بارکدی خوانده نشده";
+    $("cameraScannerStatus").textContent = cameraScanTarget === "sale"
+      ? "دوربین را روی بارکد کالا بگیر؛ کالاها خودکار به فاکتور اضافه می‌شوند."
+      : "دوربین را روی بارکد بگیر؛ بارکد در فرم کالا قرار می‌گیرد.";
+    $("cameraScannerModal").classList.remove("hidden");
+    $("cameraScannerModal").setAttribute("aria-hidden", "false");
+    cameraScanActive = true;
+
+    try {
+      let formats = ["aztec", "code_128", "code_39", "code_93", "codabar", "data_matrix", "ean_13", "ean_8", "itf", "pdf417", "qr_code", "upc_a", "upc_e"];
+      try {
+        if (typeof window.BarcodeDetector.getSupportedFormats === "function") {
+          const supported = await window.BarcodeDetector.getSupportedFormats();
+          formats = formats.filter(format => supported.includes(format));
+        }
+      } catch {}
+      cameraDetector = formats.length ? new window.BarcodeDetector({ formats }) : new window.BarcodeDetector();
+      cameraScanStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      if (!cameraScanActive) {
+        cameraScanStream.getTracks().forEach(track => track.stop());
+        cameraScanStream = null;
+        return;
+      }
+      const video = $("cameraScannerVideo");
+      video.srcObject = cameraScanStream;
+      await video.play();
+      $("cameraScannerStatus").textContent = cameraScanTarget === "sale"
+        ? "آماده اسکن پیوسته؛ برای اسکن دوباره همان کالا، آن را لحظه‌ای از جلوی دوربین بردار."
+        : "آماده اسکن؛ بارکد خوانده‌شده در کادر بارکد قرار می‌گیرد.";
+      scanCameraFrame();
+    } catch (error) {
+      stopCameraScanner();
+      const denied = error && (error.name === "NotAllowedError" || error.name === "SecurityError");
+      toast(denied
+        ? "دسترسی دوربین داده نشد. مجوز دوربین را برای سایت فعال کن یا از Binary Eye استفاده کن."
+        : "دوربین باز نشد؛ می‌توانی از Binary Eye استفاده کنی.");
+    }
+  }
+
+  async function scanCameraFrame() {
+    if (!cameraScanActive || !cameraDetector) return;
+    const video = $("cameraScannerVideo");
+    try {
+      if (video && video.readyState >= 2 && video.videoWidth > 0) {
+        const results = await cameraDetector.detect(video);
+        const rawValue = results && results.length ? String(results[0].rawValue || "").trim() : "";
+        if (rawValue) {
+          cameraNoCodeSince = 0;
+          const normalized = normalizeBarcode(rawValue);
+          if (normalized && normalized !== cameraLastAccepted) {
+            cameraLastAccepted = normalized;
+            handleCameraBarcode(rawValue);
+          }
+        } else {
+          if (!cameraNoCodeSince) cameraNoCodeSince = Date.now();
+          if (Date.now() - cameraNoCodeSince > 700) cameraLastAccepted = "";
+        }
+      }
+    } catch (error) {
+      // A transient frame decode failure should not stop the live camera.
+    }
+    if (cameraScanActive) cameraLoopTimer = setTimeout(scanCameraFrame, 120);
+  }
+
+  function handleCameraBarcode(rawValue) {
+    cameraScanCount += 1;
+    $("cameraScanCount").textContent = cameraScanCount.toLocaleString("fa-IR") + " اسکن";
+    $("cameraLastBarcode").textContent = rawValue;
+
+    if (cameraScanTarget === "sale") {
+      const normalized = normalizeBarcode(rawValue);
+      const product = db.products.find(p => normalizeBarcode(p.barcode) === normalized);
+      if (!product) {
+        $("saleLookup").value = rawValue;
+        $("cameraScannerStatus").textContent = "این بارکد در کالاهای ثبت‌شده پیدا نشد؛ اول کالا را در انبار ثبت کن.";
+        return;
+      }
+      if (addToCart(product, 1)) {
+        $("saleLookup").value = "";
+        $("saleMatches").classList.add("hidden");
+        $("cameraScannerStatus").textContent = `اضافه شد: ${product.name} · تعداد فاکتور به‌روزرسانی شد.`;
+      } else {
+        $("cameraScannerStatus").textContent = `موجودی کافی نیست: ${product.name}`;
+      }
+      return;
+    }
+
+    $("barcode").value = rawValue;
+    $("cameraScannerStatus").textContent = "بارکد در فرم کالا قرار گرفت؛ پس از تکمیل نام، قیمت‌ها و موجودی، «ذخیره کالا» را بزن.";
+  }
+
   function requestExternalScanner(target) {
     const input=target==="sale"?$("saleLookup"):$("barcode");
     const page=target==="sale"?"sales":"inventory";
@@ -299,9 +429,15 @@
   $("invoiceModalClose").addEventListener("click",closeInvoiceModal);
   $("invoiceModal").addEventListener("click",e=>{if(e.target===$("invoiceModal"))closeInvoiceModal();});
   $("backupBtn").addEventListener("click",exportBackup);
-  $("scanBtn").addEventListener("click",()=>requestExternalScanner("inventory"));
+  $("scanBtn").addEventListener("click",()=>openCameraScanner("inventory"));
   $("externalScannerBtn").addEventListener("click",()=>requestExternalScanner("inventory"));
-  $("saleScanBtn").addEventListener("click",()=>requestExternalScanner("sale"));
+  $("saleScanBtn").addEventListener("click",()=>openCameraScanner("sale"));
+  $("cameraScannerClose").addEventListener("click",stopCameraScanner);
+  $("cameraScannerStop").addEventListener("click",stopCameraScanner);
+  $("cameraScannerModal").addEventListener("click",e=>{if(e.target===$("cameraScannerModal"))stopCameraScanner();});
+  $("cameraScannerExternal").addEventListener("click",()=>{const target=cameraScanTarget;stopCameraScanner();requestExternalScanner(target);});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("cameraScannerModal").classList.contains("hidden"))stopCameraScanner();});
+  document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("cameraScannerModal").classList.contains("hidden"))stopCameraScanner();});
   $("cancelEdit").addEventListener("click",resetProductForm);
   $("inventorySearch").addEventListener("input",renderInventory);
   $("productForm").addEventListener("submit",e=>{
