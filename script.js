@@ -9,6 +9,8 @@
   let folderReady = false;
   let cacheOnlyMode = false;
   let writeQueue = Promise.resolve();
+  // Snapshot each folder file so a sale updates only the files whose contents actually changed.
+  const persistedSnapshots = { products: null, invoices: null, movements: null, settings: null };
   const LOGIN_USER = "bizad";
   const LOGIN_PASS = "1234";
   let db = { products: [], invoices: [], movements: [], settings: { vipLocal: false } };
@@ -70,27 +72,42 @@
     let invoices=await readJsonFile("biza-invoices.json",null);
     let movements=await readJsonFile("biza-stock-movements.json",null);
     let settings=await readJsonFile("biza-settings.json",null);
-    // Migrate existing data from the previous localStorage-based build instead of silently starting empty.
+    // Migrate existing data from the browser cache if this folder is new/empty.
+    let migratedFromCache = false;
     if(products===null&&invoices===null&&movements===null){
-      try{const old=JSON.parse(localStorage.getItem(DB_KEY)||"null");if(old){products=old.products||[];invoices=old.invoices||[];movements=old.movements||[];settings=old.settings||{vipLocal:false};}}catch{}
+      try{const old=JSON.parse(localStorage.getItem(DB_KEY)||"null");if(old){products=old.products||[];invoices=old.invoices||[];movements=old.movements||[];settings=old.settings||{vipLocal:false};migratedFromCache=true;}}catch{}
     }
     db={products:Array.isArray(products)?products:[],invoices:Array.isArray(invoices)?invoices:[],movements:Array.isArray(movements)?movements:[],settings:settings&&typeof settings==="object"?settings:{vipLocal:false}};
+    persistedSnapshots.products = products === null ? null : JSON.stringify(db.products);
+    persistedSnapshots.invoices = invoices === null ? null : JSON.stringify(db.invoices);
+    persistedSnapshots.movements = movements === null ? null : JSON.stringify(db.movements);
+    persistedSnapshots.settings = settings === null ? null : JSON.stringify(db.settings);
     folderReady=true;
     cacheOnlyMode=false;
     localStorage.setItem(DB_KEY,JSON.stringify(db));
     localStorage.removeItem("biza_lite_cache_dirty");
-    await persistFiles();
+    // Avoid rewriting all files at every startup; only perform a one-time migration when needed.
+    if (migratedFromCache) {
+      persistedSnapshots.products = persistedSnapshots.invoices = persistedSnapshots.movements = persistedSnapshots.settings = null;
+      await persistFiles();
+    }
     setConnection("ok","پوشه دیتابیس متصل است");
     return true;
   }
   async function persistFiles() {
-    // Keep a recovery copy so Android/browser reloads or scanner round-trips do not lock the app out.
-    localStorage.setItem(DB_KEY,JSON.stringify(db));
     if(!directoryHandle||cacheOnlyMode) return;
-    await writeJsonFile("biza-products.json",db.products);
-    await writeJsonFile("biza-invoices.json",db.invoices);
-    await writeJsonFile("biza-stock-movements.json",db.movements);
-    await writeJsonFile("biza-settings.json",db.settings);
+    const files = [
+      ["products", "biza-products.json", db.products],
+      ["invoices", "biza-invoices.json", db.invoices],
+      ["movements", "biza-stock-movements.json", db.movements],
+      ["settings", "biza-settings.json", db.settings]
+    ];
+    for (const [key, filename, data] of files) {
+      const snapshot = JSON.stringify(data);
+      if (persistedSnapshots[key] === snapshot) continue;
+      await writeJsonFile(filename, data);
+      persistedSnapshots[key] = snapshot;
+    }
   }
   function loadDb() { return folderReady; }
   function saveDb() {
@@ -114,7 +131,9 @@
         // The browser cache is the recovery copy from the last visit; sync it into the chosen folder.
         const perm=await directoryHandle.queryPermission({mode:"readwrite"});
         if(perm==="granted"){
-          folderReady=true; cacheOnlyMode=false; await persistFiles();
+          folderReady=true; cacheOnlyMode=false;
+          persistedSnapshots.products = persistedSnapshots.invoices = persistedSnapshots.movements = persistedSnapshots.settings = null;
+          await persistFiles();
           setConnection("ok","پوشه دیتابیس متصل است"); ok=true;
         }
       } else ok=await loadFolderData();
@@ -482,6 +501,15 @@
     if ("vibrate" in navigator) { try { navigator.vibrate(70); } catch {} }
   }
   $("scannerProductQty").addEventListener("input", updateScannerLineTotal);
+  function stepScannerQuantity(delta) {
+    if (!scannerPendingProduct) return;
+    const current = Math.floor(num($("scannerProductQty").value)) || 1;
+    const next = Math.max(1, Math.min(num(scannerPendingProduct.quantity), current + delta));
+    $("scannerProductQty").value = String(next);
+    updateScannerLineTotal();
+  }
+  $("scannerQtyMinus").addEventListener("click", () => stepScannerQuantity(-1));
+  $("scannerQtyPlus").addEventListener("click", () => stepScannerQuantity(1));
   $("scannerConfirmProduct").addEventListener("click", confirmScannedProduct);
   $("scannerProductQty").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); confirmScannedProduct(); } });
 
