@@ -38,3 +38,22 @@
 .scanner-actions{display:flex;gap:9px;margin-top:12px}
 .scanner-actions button{flex:1}
 @media(max-width:600px){.scanner-modal{padding:7px;align-items:center}.scanner-card{padding:12px;border-radius:17px}.scanner-header h2{font-size:19px}.scanner-view{aspect-ratio:3/4;min-height:270px;max-height:55vh}.scanner-result strong{font-size:19px}.scanner-actions button{padding:12px 8px}.scanner-aim{inset:22% 6%}}
+
+/* Scanned product confirmation panel: camera stays active while the cashier confirms quantity. */
+.scanner-pending{margin-top:12px;padding:13px;border:1px solid #3a617b;border-radius:15px;background:linear-gradient(145deg,#102638,#0c1925);}
+.scanner-pending.hidden{display:none}
+.scanner-pending-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.scanner-pending h3{margin:4px 0 5px;font-size:18px;color:#e8f7ff}
+.scanner-pending small{display:block;font-size:10px;color:#92aec2}
+.scanner-pending p{margin:0;color:#a5bdce;font-size:11px;line-height:1.8;overflow-wrap:anywhere}
+.scanner-stock{font-size:10px;white-space:nowrap;padding:6px 8px;border-radius:9px;background:#18394a;color:#bceaff}
+.scanner-product-prices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.scanner-product-prices>div{padding:9px;border:1px solid #29485d;border-radius:10px;background:#0a1722}
+.scanner-product-prices strong{display:block;margin-top:5px;color:#b9e9ff;font-size:13px}
+.scanner-qty-label{display:block;margin:8px 0 6px;font-size:12px;color:#dcecf6}
+.scanner-product-qty{width:100%;min-height:44px;padding:10px 12px;border:1px solid #3a617b;border-radius:10px;background:#07121c;color:#fff;font-size:18px;font-weight:700}
+.scanner-product-message{margin:7px 0 10px!important}
+.scanner-product-message.error{color:#ffb2b2!important}
+.scanner-pending .primary-btn{width:100%;min-height:45px}
+.scanner-pending .primary-btn:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:600px){.scanner-card{max-height:96dvh;overflow-y:auto}.scanner-view{min-height:210px;max-height:36dvh}.scanner-pending{padding:10px}.scanner-pending h3{font-size:16px}}

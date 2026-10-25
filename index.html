@@ -114,6 +114,14 @@
         <div><small>آخرین بارکد خوانده‌شده</small><strong id="scannerResult">—</strong></div>
         <span id="scannerCounter" class="scanner-counter">۰ اسکن</span>
       </div>
+      <section id="scannerPending" class="scanner-pending hidden" aria-live="polite">
+        <div class="scanner-pending-top"><div><small>کالای شناسایی‌شده</small><h3 id="scannerProductName">—</h3><p id="scannerProductBarcode">بارکد: —</p></div><span id="scannerProductStock" class="scanner-stock">موجودی: —</span></div>
+        <div class="scanner-product-prices"><div><small>قیمت فروش هر عدد</small><strong id="scannerProductPrice">—</strong></div><div><small>جمع این ردیف</small><strong id="scannerLineTotal">—</strong></div></div>
+        <label class="scanner-qty-label" for="scannerProductQty">تعداد موردنظر</label>
+        <input id="scannerProductQty" class="scanner-product-qty" type="number" inputmode="numeric" min="1" step="1" value="1" />
+        <p id="scannerProductMessage" class="scanner-product-message">تعداد را وارد کن و تأیید را بزن.</p>
+        <button id="scannerConfirmProduct" type="button" class="primary-btn full">تأیید و افزودن به فاکتور</button>
+      </section>
       <p id="scannerHelp" class="scanner-help">بارکد را مقابل دوربین بگیر. پس از هر بارکد، اسکنر برای کالای بعدی فعال می‌ماند.</p>
       <div class="scanner-actions">
         <button id="scannerSwitch" type="button" class="outline-btn">تعویض دوربین</button>

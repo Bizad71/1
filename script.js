@@ -250,6 +250,7 @@
   let scannerLastAcceptedAt = 0;
   let scannerUnlockTimer = null;
   let scannerScriptPromise = null;
+  let scannerPendingProduct = null;
 
   function loadScannerLibrary() {
     if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) return Promise.resolve();
@@ -286,6 +287,9 @@
   function openScanner(target) {
     scannerTarget = target === "sale" ? "sale" : "inventory";
     scannerCount = 0;
+    scannerPendingProduct = null;
+    $("scannerPending").classList.add("hidden");
+    $("scannerProductQty").value = "1";
     scannerLastValue = "";
     scannerLastSeenAt = 0;
     scannerLastAcceptedAt = 0;
@@ -295,7 +299,7 @@
     $("scannerCounter").textContent = "۰ اسکن";
     $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن پیوسته برای فروش" : "اسکن بارکد کالا";
     $("scannerHelp").textContent = scannerTarget === "sale"
-      ? "هر بارکد شناخته‌شده یک‌بار به فاکتور اضافه می‌شود. برای ثبت دوباره همان کالا، بارکد را از دید دوربین خارج کن و دوباره نشان بده."
+      ? "بارکد را بگیر؛ مشخصات کالا پایین تصویر می‌آید. تعداد را وارد کن و تأیید بزن؛ دوربین برای کالای بعدی روشن می‌ماند."
       : "بارکد را مقابل دوربین بگیر. پس از ثبت عدد، می‌توانی نام و مشخصات کالا را خودت وارد کنی.";
     $("scannerModal").classList.remove("hidden");
     $("scannerModal").setAttribute("aria-hidden", "false");
@@ -363,6 +367,13 @@
   function handleScannedBarcode(rawValue) {
     const value = digits(String(rawValue)).trim();
     if (!value) return;
+    // While the cashier is choosing quantity for a detected item, ignore other codes without
+    // replacing the pending barcode. Keep the current barcode locked while it remains in view.
+    if (scannerTarget === "sale" && scannerPendingProduct) {
+      if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
+      scannerUnlockTimer = setTimeout(() => { scannerLastValue = ""; scannerUnlockTimer = null; }, 750);
+      return;
+    }
     const now = Date.now();
     scannerLastSeenAt = now;
     // Keep a code locked while it remains visible. Re-arm only after ~750 ms without
@@ -379,28 +390,35 @@
     if (scannerTarget === "inventory") {
       $("barcode").value = value;
       $("barcode").dispatchEvent(new Event("input", { bubbles: true }));
-      // Stop on the first inventory barcode to avoid scanning the next item into the same product form.
+      // Inventory mode only fills the barcode field; the user defines the product details.
       stopScanner(false).then(() => closeScanner(false));
       toast("بارکد خوانده شد؛ مشخصات کالا را وارد کن.");
       $("barcode").focus({ preventScroll: true });
       return;
     }
+    // Keep the camera active but pause accepting new products until this item is confirmed.
+    if (scannerPendingProduct) return;
     $("saleLookup").value = value;
     const normalized = normalizeBarcode(value);
     const product = db.products.find(p => normalizeBarcode(p.barcode) === normalized);
     if (product) {
-      const added = addToCart(product, $("saleQty").value || 1);
-      if (added) {
-        $("saleLookup").value = "";
-        $("saleQty").value = 1;
-        $("saleMatches").classList.add("hidden");
-        scannerStatus("«" + product.name + "» به فاکتور اضافه شد؛ بارکد بعدی را نشان بده.");
-        if ("vibrate" in navigator) { try { navigator.vibrate(60); } catch {} }
-      } else {
-        scannerStatus("موجودی کافی نیست یا کالا اضافه نشد.");
-      }
+      scannerPendingProduct = product;
+      $("scannerPending").classList.remove("hidden");
+      $("scannerProductName").textContent = product.name || "کالای بدون نام";
+      $("scannerProductBarcode").textContent = "بارکد: " + (product.barcode || value);
+      $("scannerProductStock").textContent = "موجودی: " + num(product.quantity).toLocaleString("fa-IR");
+      $("scannerProductPrice").textContent = money(product.salePrice) + " تومان";
+      $("scannerProductQty").value = "1";
+      $("scannerProductQty").max = String(Math.max(1, num(product.quantity)));
+      $("scannerLineTotal").textContent = money(num(product.salePrice)) + " تومان";
+      $("scannerProductMessage").classList.remove("error");
+      $("scannerProductMessage").textContent = "تعداد را وارد کن و تأیید را بزن؛ دوربین روشن می‌ماند.";
+      $("scannerConfirmProduct").disabled = num(product.quantity) < 1;
+      scannerStatus("کالا پیدا شد؛ تعداد را در کادر پایین تأیید کن.");
+      if ("vibrate" in navigator) { try { navigator.vibrate(45); } catch {} }
     } else {
       scannerStatus("بارکد " + value + " در فهرست کالاها نیست؛ ابتدا کالا را در انبار ثبت کن.");
+      $("scannerPending").classList.add("hidden");
       showMatches(value.toLowerCase());
       toast("این بارکد در انبار ثبت نشده است.");
     }
@@ -432,6 +450,40 @@
     scannerFacing = scannerFacing === "environment" ? "user" : "environment";
     await startScanner();
   }
+
+  function updateScannerLineTotal() {
+    if (!scannerPendingProduct) return;
+    const qty = Math.max(0, Math.floor(num($("scannerProductQty").value)));
+    $("scannerLineTotal").textContent = money(num(scannerPendingProduct.salePrice) * qty) + " تومان";
+    const available = num(scannerPendingProduct.quantity);
+    const invalid = qty < 1 || qty > available;
+    $("scannerProductMessage").classList.toggle("error", invalid);
+    $("scannerProductMessage").textContent = qty < 1
+      ? "تعداد باید حداقل ۱ باشد."
+      : qty > available
+        ? "موجودی کافی نیست؛ موجودی فعلی " + available.toLocaleString("fa-IR") + " عدد است."
+        : "پس از تأیید، کالا به فاکتور اضافه می‌شود و دوربین روشن می‌ماند.";
+    $("scannerConfirmProduct").disabled = invalid;
+  }
+  function confirmScannedProduct() {
+    if (!scannerPendingProduct) return;
+    const product = scannerPendingProduct;
+    const qty = Math.floor(num($("scannerProductQty").value));
+    if (qty < 1 || qty > num(product.quantity)) { updateScannerLineTotal(); return; }
+    if (!addToCart(product, qty)) { updateScannerLineTotal(); return; }
+    scannerPendingProduct = null;
+    $("scannerPending").classList.add("hidden");
+    $("saleLookup").value = "";
+    $("saleQty").value = "1";
+    $("saleMatches").classList.add("hidden");
+    $("scannerProductQty").value = "1";
+    scannerStatus("«" + product.name + "» به فاکتور اضافه شد؛ بارکد بعدی را نشان بده.");
+    // Do not close or restart the camera. Keep the just-confirmed barcode locked until it leaves view.
+    if ("vibrate" in navigator) { try { navigator.vibrate(70); } catch {} }
+  }
+  $("scannerProductQty").addEventListener("input", updateScannerLineTotal);
+  $("scannerConfirmProduct").addEventListener("click", confirmScannedProduct);
+  $("scannerProductQty").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); confirmScannedProduct(); } });
 
   function exportBackup() {
     const blob=new Blob([JSON.stringify({format:"BIZAAP-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
