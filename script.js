@@ -552,7 +552,6 @@
   $("recentInvoices").addEventListener("click",handleInvoiceActionClick);
   $("invoiceModalClose").addEventListener("click",closeInvoiceModal);
   $("invoiceModal").addEventListener("click",e=>{if(e.target===$("invoiceModal"))closeInvoiceModal();});
-  $("backupBtn").addEventListener("click",exportBackup);
   $("scanBtn").addEventListener("click",()=>openScanner("inventory"));
   $("externalScannerBtn").addEventListener("click",()=>openScanner("inventory"));
   $("saleScanBtn").addEventListener("click",()=>openScanner("sale"));
