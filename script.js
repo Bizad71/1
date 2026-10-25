@@ -201,7 +201,17 @@
     win.document.write(`<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فاکتور ${escapeHtml(invoice.number)}</title><style>body{font-family:Tahoma,Arial,sans-serif;color:#111;margin:24px;font-size:12px}.invoice-paper{max-width:900px;margin:auto}.invoice-head{display:flex;justify-content:space-between;align-items:start;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:18px}.invoice-head h2{margin:0 0 6px}.invoice-head p{margin:4px 0}.invoice-lines{width:100%;border-collapse:collapse;margin-top:16px}.invoice-lines th,.invoice-lines td{border:1px solid #777;padding:9px;text-align:right}.invoice-lines th{background:#eee}.invoice-grand-total{margin-top:20px;border:1px solid #777;padding:12px;font-size:15px}.invoice-thanks{text-align:center;margin-top:40px}@page{size:A4;margin:14mm}@media print{body{margin:0}}</style></head><body>${invoiceMarkup(invoice)}<script>window.addEventListener('load',()=>{setTimeout(()=>window.print(),250)});<\/script></body></html>`);
     win.document.close();
   }
-  function renderInvoices() { $("invoiceTable").innerHTML=invoiceTableHtml([...db.invoices].sort((a,b)=>b.createdAt-a.createdAt)); }
+  function renderInvoices() {
+    const q=digits($("invoiceSearch")?.value || "").trim().toLowerCase();
+    const filtered=db.invoices.filter(i=>{
+      if(!q) return true;
+      const number=digits(String(i.number||"")).toLowerCase();
+      const date=digits(String(dateFa(i.createdAt)||"")).toLowerCase();
+      const isoDate=digits(new Date(i.createdAt).toISOString().slice(0,10));
+      return number.includes(q)||date.includes(q)||isoDate.includes(q);
+    }).sort((a,b)=>b.createdAt-a.createdAt);
+    $("invoiceTable").innerHTML=invoiceTableHtml(filtered);
+  }
   function resetProductForm() {
     $("productForm").reset(); $("productId").value=""; $("productFormTitle").textContent="ثبت کالای جدید"; $("cancelEdit").classList.add("hidden");
   }
@@ -553,6 +563,7 @@
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("scannerModal").classList.contains("hidden"))closeScanner();});
   $("cancelEdit").addEventListener("click",resetProductForm);
   $("inventorySearch").addEventListener("input",renderInventory);
+  $("invoiceSearch").addEventListener("input",renderInvoices);
   $("productForm").addEventListener("submit",e=>{
     e.preventDefault();
     if(!loadDb()){toast("دیتابیس متصل نیست؛ ذخیره متوقف شد.");return;}
