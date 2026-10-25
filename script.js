@@ -255,8 +255,8 @@
     if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) return Promise.resolve();
     if (scannerScriptPromise) return scannerScriptPromise;
     const urls = [
-      "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js",
-      "https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"
+      "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js",
+      "https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"
     ];
     scannerScriptPromise = new Promise((resolve, reject) => {
       let index = 0;
@@ -337,6 +337,13 @@
           if (result) {
             const text = String(typeof result.getText === "function" ? result.getText() : result.text || "");
             if (text) handleScannedBarcode(text);
+          } else if (error && /NotFoundException/i.test(String(error.name || error))) {
+            // ZXing reports NotFound while no barcode is visible. Once the view is clear,
+            // allow the same barcode to be scanned again intentionally.
+            if (scannerLastValue && Date.now() - scannerLastSeenAt > 900) {
+              scannerLastValue = "";
+              scannerLastAcceptedAt = 0;
+            }
           }
         }
       );
