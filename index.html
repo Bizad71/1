@@ -61,10 +61,10 @@
         <section id="page-inventory" class="page hidden">
           <div class="section-heading"><div><span class="eyebrow">مدیریت کالا</span><h2>انبار</h2><p class="muted">ثبت و پیگیری کالاها و موجودی.</p></div><button id="scanBtn" class="primary-btn">▦ اسکن بارکد</button></div>
           <article class="panel">
-            <div class="panel-heading"><div><h3 id="productFormTitle">ثبت کالای جدید</h3><p class="muted">بارکدخوان خارجی را باز کن و بارکد را در کادر وارد کن.</p></div></div>
+            <div class="panel-heading"><div><h3 id="productFormTitle">ثبت کالای جدید</h3><p class="muted">بارکد را با اسکنر داخل سایت بخوان؛ نام و مشخصات کالا را خودت وارد کن.</p></div></div>
             <form id="productForm" class="form-grid">
               <input type="hidden" id="productId">
-              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">بازکردن اسکنر</button></div><small class="hint">اسکنر Binary Eye باز می‌شود و در صورت اجرای سایت با HTTPS، نتیجه اسکن به همین کادر برمی‌گردد.</small></div>
+              <div class="field"><label for="barcode">بارکد</label><div class="barcode-row"><input id="barcode" inputmode="numeric" autocomplete="off" placeholder="بارکد را اسکن یا وارد کن"><button type="button" id="externalScannerBtn" class="outline-btn">اسکن با دوربین</button></div><small class="hint">اسکنر داخل BIZA باز می‌شود؛ تشخیص نام کالا انجام نمی‌شود.</small></div>
               <div class="field"><label for="productName">نام کالا</label><input id="productName" placeholder="مثلاً نوشابه خانواده" required></div>
               <div class="field"><label for="purchasePrice">قیمت خرید (تومان)</label><input id="purchasePrice" type="number" min="0" step="any" placeholder="۰" required></div>
               <div class="field"><label for="salePrice">قیمت فروش (تومان)</label><input id="salePrice" type="number" min="0" step="any" placeholder="۰" required></div>
@@ -79,7 +79,7 @@
           <div class="section-heading"><div><span class="eyebrow">صندوق سبک</span><h2>ثبت فروش</h2><p class="muted">کالا را انتخاب کن، به فاکتور اضافه کن و فروش را نهایی کن.</p></div></div>
           <div class="content-grid sales-grid">
             <article class="panel"><div class="panel-heading"><div><h3>افزودن کالا به فاکتور</h3><p class="muted">بارکد یا نام کالا را وارد کن.</p></div></div>
-              <form id="addToCartForm" class="stack-form"><label for="saleLookup">کالا / بارکد</label><div class="barcode-row"><input id="saleLookup" placeholder="بارکد یا نام کالا" required><button id="saleScanBtn" type="button" class="outline-btn">اسکن</button></div><div id="saleMatches" class="suggestions hidden"></div><label for="saleQty">تعداد</label><input id="saleQty" type="number" min="1" step="1" value="1" required><button class="primary-btn full" type="submit">افزودن به فاکتور</button></form>
+              <form id="addToCartForm" class="stack-form"><label for="saleLookup">کالا / بارکد</label><div class="barcode-row"><input id="saleLookup" autocomplete="off" inputmode="numeric" placeholder="بارکد یا نام کالا" required><button id="saleScanBtn" type="button" class="outline-btn">اسکن پیوسته</button></div><div id="saleMatches" class="suggestions hidden"></div><label for="saleQty">تعداد</label><input id="saleQty" type="number" min="1" step="1" value="1" required><button class="primary-btn full" type="submit">افزودن به فاکتور</button></form>
             </article>
             <article class="panel"><div class="panel-heading"><div><h3>فاکتور جاری</h3><span class="soft-badge" id="cartCount">۰ قلم</span></div><button id="clearCartBtn" class="text-btn">پاک کردن</button></div><div id="cartItems" class="cart-items empty-state">هنوز کالایی اضافه نشده.</div><div class="cart-total"><span>مبلغ قابل پرداخت</span><strong id="cartTotal">۰ تومان</strong></div><button id="checkoutBtn" class="primary-btn full">ثبت نهایی فروش</button></article>
           </div>
@@ -98,20 +98,34 @@
     </main>
     <footer><span> BIZAAP LITE </span><span>نسخه سبک مدیریت فروشگاه</span></footer>
   </div>
+
+  <div id="scannerModal" class="scanner-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="اسکن پیوسته بارکد">
+    <div class="scanner-card">
+      <div class="scanner-header">
+        <div><span class="eyebrow">BIZA BARCODE</span><h2 id="scannerTitle">اسکن بارکد</h2><p id="scannerStatus" class="scanner-status">برای شروع، دوربین را آماده می‌کنیم…</p></div>
+        <button id="scannerClose" class="scanner-close" type="button" aria-label="بستن اسکنر">×</button>
+      </div>
+      <div class="scanner-view">
+        <video id="scannerVideo" playsinline muted></video>
+        <div class="scanner-aim" aria-hidden="true"><span></span></div>
+        <div id="scannerLoading" class="scanner-loading">در حال آماده‌سازی دوربین…</div>
+      </div>
+      <div class="scanner-result">
+        <div><small>آخرین بارکد خوانده‌شده</small><strong id="scannerResult">—</strong></div>
+        <span id="scannerCounter" class="scanner-counter">۰ اسکن</span>
+      </div>
+      <p id="scannerHelp" class="scanner-help">بارکد را مقابل دوربین بگیر. پس از هر بارکد، اسکنر برای کالای بعدی فعال می‌ماند.</p>
+      <div class="scanner-actions">
+        <button id="scannerSwitch" type="button" class="outline-btn">تعویض دوربین</button>
+        <button id="scannerStop" type="button" class="primary-btn">توقف اسکن</button>
+      </div>
+    </div>
+  </div>
   <div id="invoiceModal" class="invoice-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="مشاهده فاکتور">
     <div class="invoice-modal-card"><div class="invoice-modal-actions"><strong>مشاهده فاکتور</strong><div><button id="invoiceModalPrint" class="primary-btn">چاپ / ذخیره PDF</button><button id="invoiceModalClose" class="outline-btn">بستن</button></div></div><div id="invoiceModalBody"></div></div>
   </div>
-  <div id="barcodeScannerModal" class="scanner-modal hidden" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
-    <div class="scanner-card">
-      <div class="scanner-head"><div><h3 id="scannerTitle">اسکن بارکد</h3><p id="scannerStatus" class="muted">دوربین را به سمت بارکد بگیر.</p></div><button type="button" id="scannerClose" class="outline-btn">بستن</button></div>
-      <video id="scannerVideo" playsinline muted></video>
-      <div class="scanner-actions"><button type="button" id="scannerRestart" class="primary-btn">اسکن دوباره</button></div>
-      <p class="hint">فقط شماره بارکد خوانده می‌شود؛ نام کالا را خودت هنگام ثبت کالا تعیین می‌کنی. برای استفاده، اجازه دسترسی دوربین را بده.</p>
-    </div>
-  </div>
   <div id="toast" class="toast" role="status"></div>
   <input id="barcodeFallback" class="visually-hidden" inputmode="numeric" aria-label="ورود بارکد">
-  <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -236,76 +236,196 @@
     $("vipToggle").checked=!!db.settings.vipLocal;
     $("vipLocalStatus").textContent=db.settings.vipLocal?"فعال در همین مرورگر":"محلی";
   }
+
+  // In-page continuous scanner based on ZXing. It reads barcode text only; product identity
+  // remains entirely under the store owner's control.
   let scannerReader = null;
-  let scannerTarget = "inventory";
   let scannerControls = null;
-  async function stopBarcodeScanner() {
-    try { if (scannerControls) scannerControls.stop(); } catch {}
+  let scannerTarget = "inventory";
+  let scannerActive = false;
+  let scannerFacing = "environment";
+  let scannerCount = 0;
+  let scannerLastValue = "";
+  let scannerLastSeenAt = 0;
+  let scannerLastAcceptedAt = 0;
+  let scannerUnlockTimer = null;
+  let scannerScriptPromise = null;
+
+  function loadScannerLibrary() {
+    if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) return Promise.resolve();
+    if (scannerScriptPromise) return scannerScriptPromise;
+    const urls = [
+      "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js",
+      "https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"
+    ];
+    scannerScriptPromise = new Promise((resolve, reject) => {
+      let index = 0;
+      const tryNext = () => {
+        if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) { resolve(); return; }
+        if (index >= urls.length) { reject(new Error("ZXing library unavailable")); return; }
+        const script = document.createElement("script");
+        script.src = urls[index++];
+        script.async = true;
+        script.onload = () => {
+          if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) resolve();
+          else tryNext();
+        };
+        script.onerror = tryNext;
+        document.head.appendChild(script);
+      };
+      tryNext();
+    }).catch(err => { scannerScriptPromise = null; throw err; });
+    return scannerScriptPromise;
+  }
+
+  function scannerStatus(message) { $("scannerStatus").textContent = message; }
+  function setScannerLoading(show, message) {
+    $("scannerLoading").classList.toggle("hidden", !show);
+    if (message) $("scannerLoading").textContent = message;
+  }
+  function openScanner(target) {
+    scannerTarget = target === "sale" ? "sale" : "inventory";
+    scannerCount = 0;
+    scannerLastValue = "";
+    scannerLastSeenAt = 0;
+    scannerLastAcceptedAt = 0;
+    if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
+    scannerUnlockTimer = null;
+    $("scannerResult").textContent = "—";
+    $("scannerCounter").textContent = "۰ اسکن";
+    $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن پیوسته برای فروش" : "اسکن بارکد کالا";
+    $("scannerHelp").textContent = scannerTarget === "sale"
+      ? "هر بارکد شناخته‌شده یک‌بار به فاکتور اضافه می‌شود. برای ثبت دوباره همان کالا، بارکد را از دید دوربین خارج کن و دوباره نشان بده."
+      : "بارکد را مقابل دوربین بگیر. پس از ثبت عدد، می‌توانی نام و مشخصات کالا را خودت وارد کنی.";
+    $("scannerModal").classList.remove("hidden");
+    $("scannerModal").setAttribute("aria-hidden", "false");
+    document.body.classList.add("scanner-open");
+    startScanner();
+  }
+  async function startScanner() {
+    if (scannerActive) await stopScanner(false);
+    if (!window.isSecureContext && location.hostname !== "localhost" && location.protocol !== "file:") {
+      setScannerLoading(true, "برای دسترسی به دوربین، سایت باید با HTTPS باز شود.");
+      scannerStatus("اتصال امن HTTPS لازم است.");
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setScannerLoading(true, "این مرورگر دسترسی مستقیم به دوربین را پشتیبانی نمی‌کند.");
+      scannerStatus("مرورگر پشتیبانی نمی‌کند.");
+      return;
+    }
+    setScannerLoading(true, "در حال بارگذاری موتور اسکن…");
+    scannerStatus("در حال آماده‌سازی اسکنر…");
+    try {
+      await loadScannerLibrary();
+      const Reader = window.ZXingBrowser.BrowserMultiFormatReader;
+      scannerReader = new Reader(undefined, { delayBetweenScanAttempts: 80, delayBetweenScanSuccess: 250 });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(d => d.kind === "videoinput");
+      let deviceId;
+      if (scannerFacing === "user") deviceId = cameras[0] && cameras[0].deviceId;
+      else {
+        const rear = cameras.find(d => /back|rear|environment|پشت/i.test(d.label));
+        deviceId = rear ? rear.deviceId : (cameras[cameras.length - 1] && cameras[cameras.length - 1].deviceId);
+      }
+      scannerActive = true;
+      const constraints = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: scannerFacing };
+      scannerControls = await scannerReader.decodeFromConstraints(
+        { video: { ...constraints, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } }, audio: false },
+        $("scannerVideo"),
+        (result, error) => {
+          if (result) {
+            const text = String(typeof result.getText === "function" ? result.getText() : result.text || "");
+            if (text) handleScannedBarcode(text);
+          }
+        }
+      );
+      setScannerLoading(false);
+      scannerStatus(cameras.length > 1 ? "دوربین روشن است؛ بارکد را داخل کادر بگیر." : "دوربین روشن است؛ بارکد را داخل کادر بگیر.");
+    } catch (err) {
+      scannerActive = false;
+      setScannerLoading(true, /NotAllowedError|Permission/i.test(String(err))
+        ? "اجازه دوربین داده نشد. مجوز دوربین سایت را در مرورگر فعال کن."
+        : /NotFoundError|DevicesNotFound/i.test(String(err))
+          ? "دوربین پیدا نشد."
+          : "اسکنر اجرا نشد؛ اتصال اینترنت و مجوز دوربین را بررسی کن.");
+      scannerStatus(/NotAllowedError|Permission/i.test(String(err)) ? "دسترسی دوربین مسدود است." : "شروع اسکن ناموفق بود.");
+      console.error("BIZA scanner start failed", err);
+    }
+  }
+  function handleScannedBarcode(rawValue) {
+    const value = digits(String(rawValue)).trim();
+    if (!value) return;
+    const now = Date.now();
+    scannerLastSeenAt = now;
+    // Keep a code locked while it remains visible. Re-arm only after ~750 ms without
+    // any successful decode, so one item held in front of the camera is not added repeatedly.
+    if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
+    scannerUnlockTimer = setTimeout(() => { scannerLastValue = ""; scannerUnlockTimer = null; }, 750);
+    if (value === scannerLastValue) return;
+    scannerLastValue = value;
+    scannerLastAcceptedAt = now;
+    scannerCount += 1;
+    $("scannerResult").textContent = value;
+    $("scannerCounter").textContent = scannerCount.toLocaleString("fa-IR") + " اسکن";
+    scannerStatus("بارکد خوانده شد؛ آماده اسکن بعدی.");
+    if (scannerTarget === "inventory") {
+      $("barcode").value = value;
+      $("barcode").dispatchEvent(new Event("input", { bubbles: true }));
+      // Stop on the first inventory barcode to avoid scanning the next item into the same product form.
+      stopScanner(false).then(() => closeScanner(false));
+      toast("بارکد خوانده شد؛ مشخصات کالا را وارد کن.");
+      $("barcode").focus({ preventScroll: true });
+      return;
+    }
+    $("saleLookup").value = value;
+    const normalized = normalizeBarcode(value);
+    const product = db.products.find(p => normalizeBarcode(p.barcode) === normalized);
+    if (product) {
+      const added = addToCart(product, $("saleQty").value || 1);
+      if (added) {
+        $("saleLookup").value = "";
+        $("saleQty").value = 1;
+        $("saleMatches").classList.add("hidden");
+        scannerStatus("«" + product.name + "» به فاکتور اضافه شد؛ بارکد بعدی را نشان بده.");
+        if ("vibrate" in navigator) { try { navigator.vibrate(60); } catch {} }
+      } else {
+        scannerStatus("موجودی کافی نیست یا کالا اضافه نشد.");
+      }
+    } else {
+      scannerStatus("بارکد " + value + " در فهرست کالاها نیست؛ ابتدا کالا را در انبار ثبت کن.");
+      showMatches(value.toLowerCase());
+      toast("این بارکد در انبار ثبت نشده است.");
+    }
+  }
+  async function stopScanner(hideLoading = true) {
+    scannerActive = false;
+    if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
+    scannerUnlockTimer = null;
+    scannerLastValue = "";
+    try { if (scannerControls && typeof scannerControls.stop === "function") scannerControls.stop(); } catch {}
     scannerControls = null;
+    try { if (scannerReader && typeof scannerReader.reset === "function") scannerReader.reset(); } catch {}
+    scannerReader = null;
     const video = $("scannerVideo");
     if (video && video.srcObject) {
       try { video.srcObject.getTracks().forEach(track => track.stop()); } catch {}
       video.srcObject = null;
     }
+    if (hideLoading) setScannerLoading(false);
   }
-  async function startBarcodeScanner() {
-    const status = $("scannerStatus");
-    await stopBarcodeScanner();
-    if (!window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatReader) {
-      status.textContent = "موتور اسکن بارگذاری نشد؛ اتصال اینترنت را بررسی کن و دوباره بزن.";
-      return;
-    }
-    status.textContent = "در حال راه‌اندازی دوربین…";
-    try {
-      scannerReader = new window.ZXingBrowser.BrowserMultiFormatReader();
-      scannerControls = await scannerReader.decodeFromVideoDevice(undefined, "scannerVideo", (result, error, controls) => {
-        if (!result) return;
-        const code = digits(result.getText()).trim();
-        if (!code) return;
-        const target = scannerTarget === "sale" ? $("saleLookup") : $("barcode");
-        target.value = code;
-        target.dispatchEvent(new Event("input", {bubbles:true}));
-        status.textContent = "بارکد خوانده شد: " + code;
-        stopBarcodeScanner();
-        target.focus({preventScroll:true});
-        toast("بارکد خوانده شد.");
-      });
-      status.textContent = "دوربین آماده است؛ بارکد را داخل کادر بگیر.";
-    } catch (err) {
-      status.textContent = "دوربین باز نشد. اجازه دوربین را بده و مطمئن شو سایت با HTTPS باز شده است.";
-    }
+  async function closeScanner(restoreFocus = true) {
+    await stopScanner();
+    $("scannerModal").classList.add("hidden");
+    $("scannerModal").setAttribute("aria-hidden", "true");
+    document.body.classList.remove("scanner-open");
+    if (restoreFocus) (scannerTarget === "sale" ? $("saleLookup") : $("barcode")).focus({ preventScroll: true });
   }
-  function requestExternalScanner(target) {
-    scannerTarget = target;
-    $("barcodeScannerModal").classList.remove("hidden");
-    document.body.style.overflow = "hidden";
-    startBarcodeScanner();
+  async function switchScannerCamera() {
+    scannerFacing = scannerFacing === "environment" ? "user" : "environment";
+    await startScanner();
   }
-  function closeBarcodeScanner() {
-    stopBarcodeScanner();
-    $("barcodeScannerModal").classList.add("hidden");
-    document.body.style.overflow = "";
-  }
-  function processScanReturn(){
-    const url=new URL(location.href);
-    const result=url.searchParams.get("result");
-    const target=url.searchParams.get("biza_scan_target")||localStorage.getItem("biza_scan_target")||sessionStorage.getItem("biza_scan_target")||"inventory";
-    const page=target==="sale"?"sales":"inventory";
-    // Restore the app and exact panel before filling the barcode input.
-    if(loggedIn()) showApp();
-    goPage(page);
-    if(!result) return;
-    const input=target==="sale"?$("saleLookup"):$("barcode");
-    input.value=result;
-    input.focus({preventScroll:true});
-    localStorage.removeItem("biza_scan_target");
-    sessionStorage.removeItem("biza_scan_target");
-    url.searchParams.delete("result");
-    url.searchParams.delete("biza_scan_target");
-    history.replaceState({},"",url.pathname+url.search+url.hash);
-    if(target==="sale") showMatches(result.toLowerCase());
-    // Intentionally no toast here: the returned barcode is already visible in its field.
-  }
+
   function exportBackup() {
     const blob=new Blob([JSON.stringify({format:"BIZAAP-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`bizaap-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(url);
@@ -336,13 +456,14 @@
   $("invoiceModalClose").addEventListener("click",closeInvoiceModal);
   $("invoiceModal").addEventListener("click",e=>{if(e.target===$("invoiceModal"))closeInvoiceModal();});
   $("backupBtn").addEventListener("click",exportBackup);
-  $("scanBtn").addEventListener("click",()=>requestExternalScanner("inventory"));
-  $("externalScannerBtn").addEventListener("click",()=>requestExternalScanner("inventory"));
-  $("saleScanBtn").addEventListener("click",()=>requestExternalScanner("sale"));
-  $("scannerClose").addEventListener("click",closeBarcodeScanner);
-  $("scannerRestart").addEventListener("click",startBarcodeScanner);
-  $("barcodeScannerModal").addEventListener("click",e=>{if(e.target.id==="barcodeScannerModal")closeBarcodeScanner();});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("barcodeScannerModal").classList.contains("hidden"))closeBarcodeScanner();});
+  $("scanBtn").addEventListener("click",()=>openScanner("inventory"));
+  $("externalScannerBtn").addEventListener("click",()=>openScanner("inventory"));
+  $("saleScanBtn").addEventListener("click",()=>openScanner("sale"));
+  $("scannerClose").addEventListener("click",()=>closeScanner());
+  $("scannerStop").addEventListener("click",()=>closeScanner());
+  $("scannerSwitch").addEventListener("click",switchScannerCamera);
+  $("scannerModal").addEventListener("click",e=>{if(e.target===$("scannerModal"))closeScanner();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("scannerModal").classList.contains("hidden"))closeScanner();});
   $("cancelEdit").addEventListener("click",resetProductForm);
   $("inventorySearch").addEventListener("input",renderInventory);
   $("productForm").addEventListener("submit",e=>{
@@ -439,7 +560,5 @@
       const savedPage=returnedTarget?(returnedTarget==="sale"?"sales":"inventory"):(localStorage.getItem("biza_lite_current_page")||"home");
       goPage(["home","inventory","sales","vip"].includes(savedPage)?savedPage:"home");
     } else showLogin();
-    // Process a scanner callback only after restoring login, cache, and panel state.
-    if(new URL(location.href).searchParams.has("result")) processScanReturn();
   })();
 })();
