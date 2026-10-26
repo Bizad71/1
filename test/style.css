@@ -45,3 +45,86 @@ td,th{border-bottom-color:#333}td{color:#e5e5e5}
 footer{border-top-color:#333;color:#999}
 button:focus-visible,input:focus-visible{outline:2px solid #ff303b;outline-offset:2px}
 ::selection{background:#ff303b;color:#fff}
+
+/* MAHSHOP TURQUOISE TECH THEME — visual overrides only */
+:root{
+  color-scheme:dark;
+  --bg:#061113;
+  --panel:#0a1b1e;
+  --panel2:#0d2427;
+  --line:#164448;
+  --text:#e8fffd;
+  --muted:#8bb8b8;
+  --blue:#36e3d4;
+  --green:#65e8bf;
+  --orange:#ffc875;
+  --red:#ff718b;
+  --violet:#92a9ff;
+}
+html{background:#061113}
+body{
+  background:
+    radial-gradient(ellipse at 84% -8%,#0d5554 0,transparent 34%),
+    radial-gradient(ellipse at 5% 48%,#082b30 0,transparent 38%),
+    linear-gradient(#061113,#071719 58%,#061113);
+  color:var(--text);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.25;
+  background-image:linear-gradient(#28d9ce14 1px,transparent 1px),linear-gradient(90deg,#28d9ce14 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(to bottom,black,transparent 90%);
+}
+.topbar{border-bottom-color:#1a4548}
+.brand-mark{background:linear-gradient(135deg,#68fff0,#0ca89f);color:#042022;box-shadow:0 0 24px #22d9ce35}
+.local-tag{background:#0b2528;border-color:#205054;color:#b8eeee}
+.local-tag i{background:#54f2d8;box-shadow:0 0 13px #54f2d8}
+.panel{background:linear-gradient(145deg,#0d2427eF,#091719f5);border-color:#174448;box-shadow:0 18px 45px #0005,0 0 0 1px #20cfc608}
+.hero{isolation:isolate;background:linear-gradient(115deg,#0c2528f5,#081719f0);border:1px solid #1c5558}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 78% 45%,#22dfd012,transparent 34%),linear-gradient(90deg,transparent 60%,#1ce5d608)}
+.eyebrow{color:#51f4e6}
+.hero p{color:#a6cece}
+.btn-primary{background:linear-gradient(135deg,#5ffff0,#12bcb1);color:#032022;box-shadow:0 7px 24px #13cfc32b}
+.btn-secondary{background:#102b2e;color:#d8fffc;border:1px solid #286064}
+.hero-art .orbit{border-color:#2bcac3}
+.hero-art .orbit-two{border-color:#1b8e91}
+.hero-art .core{background:linear-gradient(135deg,#13a9a4,#0b353a);border-color:#55f8eb;box-shadow:0 0 45px #19e0d13b}
+.hero-art .node{background:#68fff0;box-shadow:0 0 17px #36e3d4}
+.hero-art .node-two{background:#65e8bf;box-shadow:0 0 17px #65e8bf}
+.hero-art .node-three{background:#92a9ff;box-shadow:0 0 17px #92a9ff}
+.stat-card{background:linear-gradient(145deg,#0d2528,#091719);border-color:#174448;box-shadow:inset 0 1px #ffffff05}
+.stat-icon.blue,.blue{background:#10383b;color:#66fff1}
+.stat-icon.green,.green{background:#103b32;color:#65e8bf}
+.stat-icon.violet,.violet{background:#202b49;color:#aabaff}
+.stat-icon.orange,.orange{background:#44351f;color:#ffc875}
+.content-panel,.table-panel{background:linear-gradient(145deg,#0c2225,#091719)}
+.heading-icon,.rec-icon{background:#103638;color:#62f5e8}
+.recommendation{border-color:#174448;background:#081719}
+.recommendation.warn .rec-icon{background:#3b2e1b;color:#ffc875}
+.recommendation.good .rec-icon{background:#103b32;color:#65e8bf}
+.recommendation p{color:#9fc4c4}
+.rank-track{background:#153235}
+.rank-fill{background:linear-gradient(90deg,#0caaa3,#5bfff0)}
+.rank-value{color:#c3f6f2}
+.count-chip{background:#103236;color:#aafff7;border:1px solid #20585b}
+th{color:#b9fffa;background:#0e292c}
+td,th{border-bottom-color:#1a4144}
+td{color:#e0f7f5}
+.badge.ok{background:#103b32;color:#77f2c8}.badge.warn{background:#42341e;color:#ffd58a}.badge.danger{background:#421f2a;color:#ff9fb0}
+.trend-empty{background:#081719;border-color:#205054;color:#b6d4d3}
+.trend-bars{border-bottom-color:#245255}.trend-bar{background:linear-gradient(180deg,#63fff0,#087c79)}
+.trend-label,.trend-caption{color:#9fc4c4}
+.ask-form label{color:#c4e7e5}
+.ask-input-row input{background:#061315;border-color:#205054;color:#e8fffd}
+.ask-input-row input:focus{border-color:#45f4e6;box-shadow:0 0 0 3px #35e4d51b}
+.answer-box{background:#0b2022;border-color:#205054;color:#e8fffd}
+.tiny-note,.empty{color:#8bb8b8}
+.welcome-state p{color:#a6cece}
+.file-pills span{color:#d7fffc;background:#0d292c;border-color:#205054}
+footer{border-top-color:#1a4144;color:#7ca6a6}
+button:focus-visible,input:focus-visible{outline:2px solid #45f4e6;outline-offset:2px}
+::selection{background:#22cfc4;color:#041819}
+@media(prefers-reduced-motion:no-preference){
+ .brand-mark{animation:mahAnalysisTurquoiseGlow 5s ease-in-out infinite}
+ @keyframes mahAnalysisTurquoiseGlow{0%,100%{box-shadow:0 0 16px #20dcd025}50%{box-shadow:0 0 29px #20dcd04b}}
+}
