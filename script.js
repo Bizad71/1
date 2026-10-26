@@ -11,8 +11,6 @@
   let writeQueue = Promise.resolve();
   // Snapshot each folder file so a sale updates only the files whose contents actually changed.
   const persistedSnapshots = { products: null, invoices: null, movements: null, settings: null };
-  const LOGIN_USER = "bizad";
-  const LOGIN_PASS = "1234";
   let db = { products: [], invoices: [], movements: [], settings: { vipLocal: false } };
   // Keep the in-progress invoice across the round-trip to Binary Eye, which may reload this page.
   let cart = (() => {
@@ -137,17 +135,13 @@
           setConnection("ok","پوشه دیتابیس متصل است"); ok=true;
         }
       } else ok=await loadFolderData();
-      if(ok){toast("پوشه دیتابیس وصل و همگام شد.");if(loggedIn())showApp();}
+      if(ok){toast("پوشه دیتابیس وصل و همگام شد.");showApp();}
       return ok;
     } catch(err){if(err.name!=="AbortError") {console.error(err);toast("اتصال پوشه انجام نشد؛ اجازه دسترسی را بررسی کن.");}return false;}
   }
-  function loggedIn() { return localStorage.getItem("biza_lite_logged_in") === "yes"; }
   function showApp() {
-    $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("logoutBtn").classList.remove("hidden");
+    $("appView").classList.remove("hidden");
     renderAll();
-  }
-  function showLogin() {
-    $("loginView").classList.remove("hidden"); $("appView").classList.add("hidden"); $("logoutBtn").classList.add("hidden");
   }
   function goPage(page) {
     document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
@@ -156,9 +150,8 @@
     // Remember the current panel so refreshes and scanner round-trips return to the same section.
     try { localStorage.setItem("biza_lite_current_page", page); } catch {}
     window.scrollTo({top:0,behavior:"smooth"});
-    if(page==="vip") renderVip();
   }
-  function renderAll() { renderHome(); renderInventory(); renderCart(); renderInvoices(); renderVip(); }
+  function renderAll() { renderHome(); renderInventory(); renderCart(); renderInvoices(); }
   function renderHome() {
     $("statProducts").textContent=db.products.length.toLocaleString("fa-IR");
     $("statStock").textContent=db.products.reduce((s,p)=>s+num(p.quantity),0).toLocaleString("fa-IR");
@@ -183,7 +176,7 @@
   }
   function invoiceMarkup(invoice) {
     const rows=(invoice.items||[]).map((item,index)=>`<tr><td>${index+1}</td><td>${escapeHtml(item.name||"کالا")}</td><td>${escapeHtml(item.barcode||"—")}</td><td>${num(item.quantity).toLocaleString("fa-IR")}</td><td>${money(item.salePrice)} تومان</td><td>${money(num(item.quantity)*num(item.salePrice))} تومان</td></tr>`).join("");
-    return `<div class="invoice-paper"><div class="invoice-head"><div><h2>Bizaap</h2><p>فاکتور فروش</p></div><div><b>${escapeHtml(invoice.number||"—")}</b><p>${escapeHtml(dateFa(invoice.createdAt))}</p></div></div><table class="invoice-lines"><thead><tr><th>ردیف</th><th>شرح کالا</th><th>بارکد</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>${rows}</tbody></table><div class="invoice-grand-total">مبلغ کل: <strong>${money(invoice.total)} تومان</strong></div><p class="invoice-thanks">با تشکر از خرید شما</p></div>`;
+    return `<div class="invoice-paper"><div class="invoice-head"><div><h2>Mahshop</h2><p>فاکتور فروش</p></div><div><b>${escapeHtml(invoice.number||"—")}</b><p>${escapeHtml(dateFa(invoice.createdAt))}</p></div></div><table class="invoice-lines"><thead><tr><th>ردیف</th><th>شرح کالا</th><th>بارکد</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>${rows}</tbody></table><div class="invoice-grand-total">مبلغ کل: <strong>${money(invoice.total)} تومان</strong></div><p class="invoice-thanks">با تشکر از خرید شما</p></div>`;
   }
   function viewInvoice(id) {
     const invoice=db.invoices.find(i=>i.id===id); if(!invoice) return;
@@ -240,33 +233,6 @@
     else cart.push({productId:product.id,name:product.name,barcode:product.barcode,salePrice:num(product.salePrice),purchasePrice:num(product.purchasePrice),quantity});
     renderCart(); return true;
   }
-  function renderVip() {
-    const sold={}; let revenue=0, profit=0;
-    db.invoices.forEach(inv=>{ revenue+=num(inv.total); inv.items.forEach(item=>{sold[item.productId]=(sold[item.productId]||0)+num(item.quantity); profit+=num(item.quantity)*(num(item.salePrice)-num(item.purchasePrice));}); });
-    $("vipRevenue").textContent=money(revenue); $("vipProfit").textContent=money(profit); $("vipInvoices").textContent=db.invoices.length.toLocaleString("fa-IR"); $("vipAverage").textContent=money(db.invoices.length?revenue/db.invoices.length:0);
-    const sorted=[...db.products].sort((a,b)=>(sold[b.id]||0)-(sold[a.id]||0));
-    const top=sorted.filter(p=>(sold[p.id]||0)>0).slice(0,5);
-    $("topProducts").classList.toggle("empty-state",!top.length);
-    $("topProducts").innerHTML=top.length?top.map((p,i)=>`<div class="rank-item"><span class="rank-number">${(i+1).toLocaleString("fa-IR")}</span><div><b>${escapeHtml(p.name)}</b><small>${money(p.quantity)} عدد موجودی</small></div><span class="rank-value">${money(sold[p.id])} عدد</span></div>`).join(""):'هنوز اطلاعات کافی ثبت نشده است.';
-    const slow=sorted.filter(p=>(sold[p.id]||0)===0).slice(0,5);
-    $("slowProducts").classList.toggle("empty-state",!slow.length);
-    $("slowProducts").innerHTML=slow.length?slow.map(p=>`<div class="rank-item"><span class="rank-number">·</span><div><b>${escapeHtml(p.name)}</b><small>بدون فروش ثبت‌شده</small></div><span class="rank-value">${money(p.quantity)} عدد</span></div>`).join(""):'همه کالاها دست‌کم یک فروش ثبت‌شده دارند.';
-    const days=[]; for(let n=6;n>=0;n--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-n);const key=todayKey(d);const total=db.invoices.filter(i=>todayKey(new Date(i.createdAt))===key).reduce((s,i)=>s+num(i.total),0);days.push({label:d.toLocaleDateString("fa-IR",{weekday:"short"}),total});}
-    const max=Math.max(...days.map(d=>d.total),1);
-    $("salesChart").classList.toggle("empty-state",!revenue);
-    $("salesChart").innerHTML=revenue?days.map(d=>`<div class="bar-column"><span class="bar-value">${d.total?money(d.total):"—"}</span><div class="bar" style="height:${Math.max(d.total?5:2,d.total/max*95)}px"></div><span class="bar-label">${d.label}</span></div>`).join(""):'برای نمایش نمودار، فروش ثبت کن.';
-    const advice=[];
-    const low=db.products.filter(p=>num(p.quantity)<=5);
-    if(low.length) advice.push({icon:"!",title:"موجودی کم",text:`${low.length} کالا موجودی ۵ عدد یا کمتر دارند؛ پیش از سفارش مجدد بررسی‌شان کن.`});
-    if(top.length) advice.push({icon:"↗",title:"کالای پرفروش",text:`«${top[0].name}» با ${money(sold[top[0].id])} عدد، بیشترین تعداد فروش ثبت‌شده را دارد.`});
-    if(slow.length) advice.push({icon:"◇",title:"کالاهای بدون فروش",text:`${slow.length} کالا هنوز فروش ثبت‌شده ندارند. تاریخ ورود و بازه بررسی را هم در نظر بگیر.`});
-    if(!db.invoices.length) advice.push({icon:"i",title:"شروع تحلیل",text:"بعد از ثبت چند فاکتور، گزارش پرفروش‌ها، سود و روند فروش معنادارتر می‌شود."});
-    advice.push({icon:"≈",title:"دقت محاسبه سود",text:"سود فعلی با قیمت خرید ذخیره‌شده در فاکتور محاسبه می‌شود؛ هزینه‌های جانبی و تخفیف‌ها هنوز لحاظ نشده‌اند."});
-    $("vipAdvice").innerHTML=advice.map(a=>`<div class="advice"><span class="advice-icon">${a.icon}</span><div><b>${escapeHtml(a.title)}</b><p>${escapeHtml(a.text)}</p></div></div>`).join("");
-    $("vipToggle").checked=!!db.settings.vipLocal;
-    $("vipLocalStatus").textContent=db.settings.vipLocal?"فعال در همین مرورگر":"محلی";
-  }
-
   // In-page continuous scanner based on ZXing. It reads barcode text only; product identity
   // remains entirely under the store owner's control.
   let scannerReader = null;
@@ -353,7 +319,16 @@
     try {
       await loadScannerLibrary();
       const Reader = window.ZXingBrowser.BrowserMultiFormatReader;
-      scannerReader = new Reader(undefined, { delayBetweenScanAttempts: 80, delayBetweenScanSuccess: 250 });
+      // Ask ZXing to spend more effort on small/low-contrast barcodes and limit work to common retail formats.
+      const ZX = window.ZXingBrowser;
+      const hints = new Map();
+      if (ZX.DecodeHintType && ZX.DecodeHintType.TRY_HARDER) hints.set(ZX.DecodeHintType.TRY_HARDER, true);
+      if (ZX.DecodeHintType && ZX.DecodeHintType.POSSIBLE_FORMATS && ZX.BarcodeFormat) {
+        const formats = ["EAN_13","EAN_8","UPC_A","UPC_E","CODE_128","CODE_39","ITF","CODABAR","QR_CODE"]
+          .map(name => ZX.BarcodeFormat[name]).filter(Boolean);
+        if (formats.length) hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, formats);
+      }
+      scannerReader = new Reader(hints.size ? hints : undefined, { delayBetweenScanAttempts: 60, delayBetweenScanSuccess: 180 });
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(d => d.kind === "videoinput");
       let deviceId;
@@ -365,7 +340,7 @@
       scannerActive = true;
       const constraints = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: scannerFacing };
       scannerControls = await scannerReader.decodeFromConstraints(
-        { video: { ...constraints, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 } }, audio: false },
+        { video: { ...constraints, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 }, focusMode: "continuous" }, audio: false },
         $("scannerVideo"),
         (result, error) => {
           if (result) {
@@ -391,7 +366,7 @@
           ? "دوربین پیدا نشد."
           : "اسکنر اجرا نشد؛ اتصال اینترنت و مجوز دوربین را بررسی کن.");
       scannerStatus(/NotAllowedError|Permission/i.test(String(err)) ? "دسترسی دوربین مسدود است." : "شروع اسکن ناموفق بود.");
-      console.error("BIZA scanner start failed", err);
+      console.error("Mahshop scanner start failed", err);
     }
   }
   function handleScannedBarcode(rawValue) {
@@ -510,23 +485,13 @@
 
   function exportBackup() {
     const blob=new Blob([JSON.stringify({format:"BIZAAP-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`bizaap-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(url);
+    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`mahshop-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(url);
     toast("درخواست خروجی بکاپ انجام شد.");
   }
 
-  $("loginForm").addEventListener("submit",async e=>{
-    e.preventDefault();
-    if($("username").value.trim()===LOGIN_USER && $("password").value===LOGIN_PASS){
-      localStorage.setItem("biza_lite_logged_in","yes"); $("loginError").classList.add("hidden");
-      if(!folderReady){const ok=await connectFolder(false);if(!ok){toast("برای ادامه، پوشه دیتابیس را وصل کن.");return;}}
-      showApp();
-    } else $("loginError").classList.remove("hidden");
-  });
-  $("logoutBtn").addEventListener("click",()=>{localStorage.removeItem("biza_lite_logged_in");showLogin();});
   $("connectFolderBtn").addEventListener("click",()=>connectFolder(true));
   document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>goPage(b.dataset.page)));
   document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>goPage(b.dataset.go)));
-  $("openVip").addEventListener("click",()=>goPage("vip"));
   function handleInvoiceActionClick(e) {
     const view=e.target.closest("[data-view-invoice]");
     const print=e.target.closest("[data-print-invoice]");
@@ -602,19 +567,18 @@
     for(const item of cart){const p=db.products.find(x=>x.id===item.productId);if(!p||num(p.quantity)<item.quantity){toast(`موجودی ${item.name} کافی نیست.`);return;}}
     const items=cart.map(x=>({...x}));
     items.forEach(item=>{const p=db.products.find(x=>x.id===item.productId);p.quantity-=item.quantity;db.movements.push({id:"m_"+Date.now()+"_"+Math.random().toString(36).slice(2,5),productId:p.id,type:"sale",delta:-item.quantity,at:Date.now(),note:"فروش"});});
-    const invoice={id:"i_"+Date.now(),number:"BIZAAP-"+String(db.invoices.length+1).padStart(5,"0"),createdAt:Date.now(),items,total:items.reduce((s,x)=>s+x.quantity*x.salePrice,0)};
+    const invoice={id:"i_"+Date.now(),number:"MAHSHOP-"+String(db.invoices.length+1).padStart(5,"0"),createdAt:Date.now(),items,total:items.reduce((s,x)=>s+x.quantity*x.salePrice,0)};
     db.invoices.push(invoice);
     if(saveDb()){cart=[];scannerSaleOrder=[];renderAll();goPage("sales");toast(`فاکتور ${invoice.number} ثبت شد.`);}
   });
-  $("vipToggle").addEventListener("change",e=>{db.settings.vipLocal=e.target.checked;if(saveDb())renderVip();});
   // The user may scan with a keyboard-emulating scanner or return a shared/copied barcode.
   // Enter on the barcode field triggers lookup when used in the sales form.
   $("saleLookup").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("addToCartForm").requestSubmit();}});
-  window.addEventListener("storage",()=>{if(loadDb()&&loggedIn())renderAll();});
-  window.addEventListener("focus",()=>{if(loadDb()&&loggedIn())renderAll();});
+  window.addEventListener("storage",()=>{if(loadDb())renderAll();});
+  window.addEventListener("focus",()=>{if(loadDb())renderAll();});
   (async()=>{
-    // Restore the remembered login and recovery data first. Permission prompts cannot reliably be
-    // requested on page load on Android, especially after returning from Binary Eye.
+    // Restore cached data first. Permission prompts cannot reliably be requested on page load
+    // on Android, especially after returning from an external scanner.
     let cached=null;
     try { cached=JSON.parse(localStorage.getItem(DB_KEY)||"null"); } catch {}
     if(cached&&typeof cached==="object"){
@@ -633,14 +597,12 @@
         else setConnection("bad","پوشه دیتابیس را یک‌بار وصل کن");
       }
     } catch(err){console.warn("Folder handle not available",err);}
-    // A successful login is remembered. A temporary folder-permission issue must never send
-    // the user back to the login screen; cached data is shown and the folder can be reconnected.
-    if(loggedIn()) {
-      showApp();
-      const urlNow=new URL(location.href);
-      const returnedTarget=urlNow.searchParams.get("biza_scan_target")||localStorage.getItem("biza_scan_target");
-      const savedPage=returnedTarget?(returnedTarget==="sale"?"sales":"inventory"):(localStorage.getItem("biza_lite_current_page")||"home");
-      goPage(["home","inventory","sales","vip"].includes(savedPage)?savedPage:"home");
-    } else showLogin();
+    // The app opens directly without a username/password screen; cached data remains available
+    // if folder permission temporarily needs to be restored.
+    showApp();
+    const urlNow=new URL(location.href);
+    const returnedTarget=urlNow.searchParams.get("biza_scan_target")||localStorage.getItem("biza_scan_target");
+    const savedPage=returnedTarget?(returnedTarget==="sale"?"sales":"inventory"):(localStorage.getItem("biza_lite_current_page")||"home");
+    goPage(["home","inventory","sales"].includes(savedPage)?savedPage:"home");
   })();
 })();
