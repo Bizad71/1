@@ -107,3 +107,97 @@
 .management-link span:not(.management-link-icon){font-size:14px;font-weight:800;letter-spacing:.2px}
 .management-link small{font-size:10px;color:#bfe7fb;margin-top:3px}
 @media(max-width:600px){.management-link{min-width:145px;padding:9px 10px;grid-template-columns:34px auto;column-gap:8px}.management-link-icon{width:34px;height:34px;font-size:20px}.management-link span:not(.management-link-icon){font-size:12px}.management-link small{font-size:9px}}
+
+/* MAHSHOP PREMIUM BLACK / RED / WHITE THEME — visual-only overrides */
+:root{
+  --bg:#080808;
+  --panel:#151515;
+  --panel2:#202020;
+  --line:#393939;
+  --blue:#ffffff;
+  --blue2:#ff343d;
+  --blue3:#ffe5e6;
+  --text:#f7f7f7;
+  --muted:#b7b7b7;
+  --green:#e6e6e6;
+  --red:#ff343d;
+  --radius:18px;
+  --shadow:0 18px 48px #0009;
+}
+html{background:#080808}
+body{background:radial-gradient(ellipse at 8% 0%,#4a080c 0,transparent 34%),radial-gradient(ellipse at 100% 12%,#242424 0,transparent 30%),#080808;color:#f7f7f7}
+.topbar{border-bottom-color:#ffffff1c}
+.brand-mark{background:linear-gradient(135deg,#ff3b44,#a9000a);color:#fff;box-shadow:0 8px 28px #ff1e2b38;border:1px solid #ff656b}
+.brand strong{color:#fff}
+.connection,.muted,.hint,.security-note,.stat-top,.stat-card small,.panel-heading p,.list-row small,.quick-card small,.scanner-status,.scanner-help,.scanner-result small,.scanner-sale-list-heading small{color:#b7b7b7}
+.dot.ok{background:#fff;box-shadow:0 0 12px #ffffff55}
+.dot.bad{background:#ff343d;box-shadow:0 0 12px #ff343d66}
+.icon-btn{background:#171717;border-color:#414141;color:#fff}
+.panel,.login-card{background:linear-gradient(145deg,#1b1b1b,#101010);border-color:#393939;box-shadow:0 18px 48px #0008}
+.eyebrow{color:#ff4a52}
+.login-art h1 span,.wave{color:#ff343d}
+.orb-one{border-color:#ff343d30;box-shadow:0 0 0 28px #ff343d0c,0 0 0 60px #ff343d07}
+.orb-two{background:radial-gradient(circle,#ff343d55,transparent 70%)}
+.feature-pills span{border-color:#ff343d55;color:#fff;background:#ff343d12}
+.card-icon,.stat-icon,.quick-icon{background:#ff343d18;border:1px solid #ff343d35;color:#ff4b53}
+input,.scanner-product-qty{background:#090909;border-color:#454545;color:#fff}
+input:focus{border-color:#ff343d;box-shadow:0 0 0 3px #ff343d20}
+input::placeholder{color:#777}
+.primary-btn{background:linear-gradient(135deg,#ff424a,#bd000b);border-color:#ff5960;color:#fff;box-shadow:0 8px 24px #ff1e2b2c}
+.primary-btn:hover{background:linear-gradient(135deg,#ff6269,#d5000d)}
+.outline-btn{background:#1a1a1a;border-color:#555;color:#fff}
+.outline-btn:hover{border-color:#ff343d;background:#2a1112}
+.text-btn,.table-action{color:#ff555d}
+.main-nav{background:#101010;border-color:#3c3c3c}
+.nav-btn{color:#b8b8b8}
+.nav-btn.active{background:linear-gradient(135deg,#ff424a,#b9000a);color:#fff;box-shadow:0 5px 20px #ff343d30}
+.stat-card{background:linear-gradient(145deg,#202020,#121212);border-color:#3b3b3b}
+.stat-icon{color:#ff454d}
+.quick-card{background:#111;border-color:#383838}
+.quick-card:hover{border-color:#ff343d;background:#211011}
+.soft-badge{background:#ff343d16;color:#fff;border-color:#ff343d40}
+.list-row,th,td,.cart-row{border-bottom-color:#ffffff14}
+th{background:#0d0d0d;color:#f1f1f1}
+td{color:#ededed}
+tbody tr:hover{background:#ff343d0b}
+.suggestion{background:#141414;border-color:#383838;color:#fff}
+.suggestions{border-color:#3b3b3b}
+.suggestion:hover{background:#251011}
+.danger-text,.table-action.delete,.cart-remove,.error{color:#ff454d}
+.cart-total strong{color:#ff454d}
+.vip-banner{background:linear-gradient(110deg,#38090c,#171717 72%);border-color:#7d2227}
+.banner-symbol{color:#ff343d20}
+.vip-star{color:#fff}
+.vip-stats .stat-card{border-color:#4b292a}
+.management-link{color:#fff;background:linear-gradient(125deg,#ff343d 0%,#9f0008 48%,#151515 100%);border-color:#ff6269;box-shadow:0 9px 28px #ff1e2b30,inset 0 1px #ffffff35}
+.management-link:hover{border-color:#fff;box-shadow:0 12px 32px #ff1e2b48,inset 0 1px #ffffff45}
+.management-link-icon{background:#ffffff1c;border-color:#ffffff65;color:#fff}
+.management-link small{color:#fff0f0}
+footer{border-top-color:#ffffff1c;color:#8d8d8d}
+.scanner-modal{background:rgba(0,0,0,.9)}
+.scanner-card{background:#111;border-color:#4b2527;color:#f7f7f7;box-shadow:0 25px 90px #000c}
+.scanner-close{background:#211112;border-color:#603034;color:#fff}
+.scanner-view{background:#020202;border-color:#623035}
+.scanner-aim{border-color:#ff343da8}
+.scanner-aim:before,.scanner-aim:after,.scanner-aim span:before,.scanner-aim span:after{border-color:#fff}
+.scanner-loading{background:#160809eF;color:#fff;border-color:#7b252b}
+.scanner-result{background:#1b1112;border-color:#5c292d}
+.scanner-result strong{color:#fff}
+.scanner-counter{background:#351114;border-color:#793039;color:#fff}
+.scanner-pending{background:linear-gradient(145deg,#281012,#121212);border-color:#713037}
+.scanner-pending h3,.scanner-sale-list-heading strong,.scanner-sale-name b{color:#fff}
+.scanner-pending small,.scanner-pending p,.scanner-sale-name small{color:#c4b7b7}
+.scanner-stock{background:#45171b;color:#fff}
+.scanner-product-prices>div{background:#111;border-color:#4a292b}
+.scanner-product-prices strong{color:#fff}
+.scanner-qty-label{color:#f4f4f4}
+.scanner-qty-step,.scanner-sale-qty button{border-color:#b52b33;background:linear-gradient(135deg,#ff343d,#8d0008);color:#fff}
+.scanner-qty-step:active,.scanner-sale-qty button:active{background:#c6000b}
+.scanner-sale-list{background:#111;border-color:#4b292b}
+.scanner-sale-list-heading{border-bottom-color:#ffffff1a}
+.scanner-sale-qty span{color:#fff}
+.scanner-sale-total{background:#211113;border-top-color:#ffffff1a;color:#ddd}
+.scanner-sale-total strong{color:#fff}
+.scanner-pending .primary-btn:disabled{opacity:.45}
+/* keep the printable invoice paper clean and readable */
+@media print{.invoice-modal-card,.invoice-paper{background:#fff!important;color:#111!important}}
