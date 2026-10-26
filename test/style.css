@@ -4,26 +4,44 @@
 @media(max-width:900px){.hero-art{opacity:.22;left:0}.hero-copy{max-width:100%}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid{grid-template-columns:1fr}.hero{padding:28px 24px}.app-shell{padding:0 15px}}
 @media(max-width:480px){.topbar{height:70px;margin-bottom:18px}.local-tag{font-size:10px;padding:6px 9px}.brand-mark{width:38px;height:38px}.hero{padding:24px 17px;border-radius:17px}.hero h1{font-size:25px}.hero p{font-size:12px}.connect-actions .btn{flex:1;padding:10px 9px;font-size:11px}.stats-grid{gap:9px}.stat-card{padding:13px;border-radius:14px}.stat-card strong{font-size:20px}.stat-label{font-size:11px}.stat-card small{font-size:9px}.content-panel,.table-panel{padding:16px}.section-heading h2{font-size:17px}.section-heading{align-items:flex-end}.rank-row{grid-template-columns:85px 1fr auto;gap:7px}footer{flex-direction:column;gap:4px}.ask-input-row{flex-direction:column}.ask-input-row .btn{width:100%}}
 
-/* Smart sales analysis refinements */
-.recommendation.danger .rec-icon{background:#48232c;color:var(--red)}
-.trend-section{margin-bottom:20px}
-.trend-controls{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:0 0 14px}
-.trend-controls label{display:flex;flex-direction:column;gap:5px;color:#9cafc5;font-size:11px;min-width:135px}
-.trend-controls select{background:#081523;border:1px solid #293c54;color:var(--text);border-radius:10px;padding:9px 11px;min-width:145px;max-width:100%;outline:none}
-.trend-controls select:focus{border-color:var(--blue)}
-.trend-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#0a1726;border:1px solid #20344b;border-radius:12px;padding:12px 14px;margin-bottom:12px;color:#a8bad0;font-size:12px}
-.trend-summary strong{color:#eaf5ff;font-size:13px}
-.trend-summary b{color:var(--green);font-size:16px}
-.trend-panel{min-width:0}
-.trend-bars{height:175px;overflow-x:auto;overflow-y:hidden;gap:7px;padding:12px 5px 0;scrollbar-width:thin;scrollbar-color:#2b5275 #0b1727}
-.trend-bar-wrap{flex:1 0 23px;gap:6px}
-.trend-bar{width:min(100%,22px);max-height:76%;min-height:2px}
-.trend-label{white-space:nowrap;font-size:9px}
-.trend-data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:7px;margin-top:14px}
-.trend-data-item{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:8px 9px;background:#0a1726;border:1px solid #1d3046;border-radius:9px;min-width:0}
-.trend-data-item span{font-size:10px;color:#91a6bf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.trend-data-item strong{font-size:11px;color:#e3efff;white-space:nowrap}
-.weekday-heading{margin:28px 0 12px;padding-top:20px;border-top:1px solid #20334b}
-.weekday-heading h3{font-size:16px;margin:3px 0 0}
-.weekday-panel .trend-bars{height:145px}
-@media(max-width:600px){.trend-controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}.trend-controls label:first-child{grid-column:1/-1}.trend-controls select{width:100%;min-width:0}.trend-summary{align-items:flex-start;flex-direction:column}.trend-bars{height:155px}.trend-data-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.weekday-panel .trend-bars{height:140px}}
+
+/* MAHSHOP BLACK / RED / WHITE THEME — visual-only overrides; layout and behavior unchanged */
+:root{color-scheme:dark;--bg:#080808;--panel:#121212;--panel2:#191919;--line:#343434;--text:#ffffff;--muted:#b8b8b8;--blue:#ff303b;--green:#ffffff;--orange:#ff626a;--red:#ff626a;--violet:#ff9298}
+body{background:radial-gradient(ellipse at 80% -10%,#4a090d 0,transparent 36%),var(--bg);color:#fff}
+.topbar{border-bottom-color:#3a1719}
+.brand-mark{background:linear-gradient(135deg,#ff4a53,#a8000a);box-shadow:0 8px 24px #ff263533;color:#fff}
+.local-tag{color:#f2f2f2;background:#171717;border-color:#3a3a3a}
+.local-tag i{background:#ff303b;box-shadow:0 0 12px #ff303b}
+.panel{background:linear-gradient(145deg,#191919,#0c0c0c);border-color:#3a292a;box-shadow:0 18px 45px #0008}
+.eyebrow{color:#ff4a53}
+.hero p{color:#d0d0d0}
+.btn-primary{background:linear-gradient(135deg,#ff4a53,#c9000c);color:#fff;box-shadow:0 7px 22px #ff26352b}
+.btn-secondary{background:#202020;color:#fff;border:1px solid #4a3032}
+.status-message.error,.recommendation.warn .rec-icon{color:#ff777e!important}
+.status-message.success{color:#fff!important}
+.orbit{border-color:#76242a}.orbit-two{border-color:#9d2a31}
+.core{background:linear-gradient(135deg,#f32935,#5c080d);border-color:#ff5961;box-shadow:0 0 45px #ff253b3b;color:#fff}
+.node{background:#ff404a;box-shadow:0 0 17px #ff303b}.node-two,.node-three{background:#fff;box-shadow:0 0 14px #ffffffaa}
+.stat-card{background:linear-gradient(145deg,#191919,#101010);border-color:#343434}
+.blue,.green,.violet,.orange{background:#2a1113;color:#ff646d}
+.stat-label{color:#e0e0e0}.stat-card small{color:#a8a8a8}
+.heading-icon,.rec-icon,.welcome-icon{background:#2b1113;color:#ff5b65;border-color:#5a2529}
+.recommendation{border-color:#383030;background:#111}
+.recommendation.warn .rec-icon{background:#351416;color:#ff777e}
+.recommendation.good .rec-icon{background:#252525;color:#fff}
+.recommendation p{color:#c3c3c3}
+.rank-track{background:#333}.rank-fill{background:linear-gradient(90deg,#a9000b,#ff4a53)}.rank-value{color:#fff}
+.count-chip{background:#2b1113;color:#fff;border:1px solid #5a2529}
+th{color:#fff;background:#1c1c1c}
+td,th{border-bottom-color:#333}td{color:#e5e5e5}
+.badge.ok,.badge.warn,.badge.danger{background:#321416;color:#ff9298}
+.trend-empty{background:#101010;border-color:#633036;color:#ccc}
+.trend-bars{border-bottom-color:#444}.trend-bar{background:linear-gradient(180deg,#ff5b65,#a8000a)}.trend-label,.trend-caption{color:#c3c3c3}
+.ask-form label{color:#ddd}.ask-input-row input{background:#080808;border-color:#444;color:#fff}.ask-input-row input:focus{border-color:#ff303b}
+.answer-box{background:#111;border-color:#3b292a;color:#eee}
+.tiny-note,.empty{color:#aaa}
+.welcome-state p{color:#ccc}
+.file-pills span{color:#fff;background:#171717;border-color:#454545}
+footer{border-top-color:#333;color:#999}
+button:focus-visible,input:focus-visible{outline:2px solid #ff303b;outline-offset:2px}
+::selection{background:#ff303b;color:#fff}

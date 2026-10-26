@@ -3,22 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07111f">
-  <title>Bizaap | مدیریت هوشمند</title>
+  <meta name="theme-color" content="#080808">
+  <title>بیزااپ | مدیریت هوشمند</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">M</span><span><strong>Mahshop</strong><small>مدیریت هوشمند</small></span></a>
-      <span class="local-tag"><i></i>  تحلیل اطلاعات فروشگاه</span>
+      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">B</span><span><strong>بیزااپ</strong><small>مدیریت هوشمند</small></span></a>
+      <span class="local-tag"><i></i> تحلیل محلی اطلاعات</span>
     </header>
 
     <main>
       <section class="hero panel">
         <div class="hero-copy">
           <span class="eyebrow">SMART STORE ANALYTICS</span>
-          <h1>مدیریت هوشمند = افزایش فروش</h1>
+          <h1>تصمیم‌های بهتر برای فروشگاهت</h1>
+          <p>پوشهٔ دیتابیس فروشگاه را وصل کن تا فروش، سود، موجودی و کالاهای نیازمند توجه بررسی شوند. فایل‌های اصلی فقط خوانده می‌شوند و تغییری نمی‌کنند.</p>
           <div class="connect-actions">
             <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> اتصال پوشهٔ دیتابیس</button>
             <button id="refreshBtn" class="btn btn-secondary" type="button" disabled>به‌روزرسانی تحلیل</button>
@@ -45,22 +46,14 @@
 
         <section class="panel table-panel"><div class="panel-heading"><div><span class="eyebrow">INVENTORY WATCH</span><h3>وضعیت کالاها</h3></div><span id="inventoryCount" class="count-chip">۰ کالا</span></div><div class="table-wrap"><table><thead><tr><th>نام کالا</th><th>موجودی</th><th>فروش ثبت‌شده</th><th>سود واحد</th><th>وضعیت</th></tr></thead><tbody id="inventoryRows"><tr><td colspan="5" class="empty">ابتدا پوشهٔ دیتابیس را متصل کن.</td></tr></tbody></table></div></section>
 
-        <section class="panel content-panel trend-section">
-          <div class="panel-heading"><div><span class="eyebrow">SALES TREND</span><h3>روند فروش</h3></div></div>
-          <div class="trend-controls">
-            <label>نوع نمودار<select id="trendMode"><option value="monthly">فروش روزانه در یک ماه</option><option value="annual">مقایسه ماهانه در یک سال</option></select></label>
-            <label>سال<select id="trendYear"></select></label>
-            <label id="trendMonthLabel">ماه<select id="trendMonth"></select></label>
-          </div>
-          <div id="trendSummary" class="trend-summary">پس از اتصال دیتابیس، فروش بازهٔ انتخابی نمایش داده می‌شود.</div>
-          <div id="trendPanel" class="trend-panel"><div class="trend-empty">بعد از اتصال پوشه، نمودار فروش نمایش داده می‌شود.</div></div>
-          <div class="weekday-heading"><div><span class="eyebrow">WEEKDAY PERFORMANCE</span><h3>فروش در روزهای هفته</h3></div></div>
-          <div id="weekdayPanel" class="weekday-panel"><div class="trend-empty">برای مقایسه روزهای هفته، دیتابیس را متصل کن.</div></div>
+        <section class="content-grid lower-grid">
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">SALES TREND</span><h3>روند فروش</h3></div></div><div id="trendPanel" class="trend-panel"><div class="trend-empty">بعد از اتصال پوشه، وضعیت سابقهٔ فروش نمایش داده می‌شود.</div></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">ASK YOUR STORE</span><h3>پرسش از اطلاعات فروشگاه</h3></div><span class="heading-icon">✧</span></div><form id="askForm" class="ask-form"><label for="questionInput">سؤالت را دربارهٔ فروشگاه بنویس</label><div class="ask-input-row"><input id="questionInput" type="text" placeholder="مثلاً کدام کالا بیشترین سود را داشته؟" autocomplete="off"><button class="btn btn-primary" type="submit">پاسخ</button></div></form><div id="answerBox" class="answer-box">پاسخ‌ها بر اساس اطلاعات همین پوشه و محاسبات محلی ارائه می‌شوند.</div><p class="tiny-note">این نسخه بدون ارسال اطلاعات به سرویس بیرونی کار می‌کند؛ پاسخ‌گویی آن مبتنی بر قواعد و آمار محلی است، نه مدل گفت‌وگوی آنلاین.</p></section>
         </section>
       </section>
 
       <section id="welcomeState" class="welcome-state"><div class="welcome-icon">▤</div><h2>اطلاعات فروشگاهت را بررسی کن</h2><p>برای شروع، پوشهٔ دیتابیس را انتخاب کن. این صفحه فایل‌های کالاها، فاکتورها و گردش انبار را می‌خواند و گزارش را در همین مرورگر می‌سازد.</p><div class="file-pills"><span>biza-products.json</span><span>biza-invoices.json</span><span>biza-stock-movements.json</span><span>biza-settings.json</span></div></section>
-      <footer><span>Mahshop · مدیریت هوشمند</span><span>اطلاعات فقط خوانده می‌شوند و به سرور ارسال نمی‌شوند.</span></footer>
+      <footer><span>بیزااپ · مدیریت هوشمند</span><span>اطلاعات فقط خوانده می‌شوند و به سرور ارسال نمی‌شوند.</span></footer>
     </main>
   </div>
   <script src="script.js"></script>
