@@ -60,3 +60,41 @@
 .scanner-pending .primary-btn{width:100%;min-height:45px}
 .scanner-pending .primary-btn:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:600px){.scanner-card{max-height:96dvh;overflow-y:auto}.scanner-view{min-height:210px;max-height:36dvh}.scanner-pending{padding:10px}.scanner-pending h3{font-size:16px}}
+
+/* Compact horizontal camera and live invoice rows in continuous-sale scanning */
+.scanner-card{width:min(620px,100%)}
+.scanner-view{aspect-ratio:16/7;min-height:125px;max-height:25vh}
+.scanner-aim{inset:17% 17%;border-radius:12px}
+.scanner-sale-list{margin-top:12px;border:1px solid #29485d;border-radius:14px;background:#0b1925;overflow:hidden}
+.scanner-sale-list.hidden{display:none}
+.scanner-sale-list-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #ffffff12}
+.scanner-sale-list-heading strong{font-size:13px;color:#e8f7ff}
+.scanner-sale-list-heading small{font-size:10px;color:#8fa9bd}
+.scanner-sale-items{max-height:30vh;overflow:auto}
+.scanner-sale-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border-bottom:1px solid #ffffff0d}
+.scanner-sale-row:last-child{border-bottom:0}
+.scanner-sale-name{min-width:0;flex:1}
+.scanner-sale-name b{display:block;font-size:12px;line-height:1.6;overflow-wrap:anywhere;color:#e9f6ff}
+.scanner-sale-name small{display:block;margin-top:2px;font-size:10px;color:#8ea8bc;overflow-wrap:anywhere}
+.scanner-sale-qty{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.scanner-sale-qty span{min-width:22px;text-align:center;font-size:13px;font-weight:800;color:#c8eeff}
+.scanner-sale-qty button{width:32px;height:32px;border:1px solid #3478a5;border-radius:9px;background:#12334a;color:#eaf8ff;font-size:21px;line-height:1;touch-action:manipulation}
+.scanner-sale-qty button:active{background:#1c5275;transform:scale(.96)}
+.scanner-sale-empty{margin:0;padding:15px 10px;text-align:center;font-size:11px;color:#718da3}
+.scanner-sale-total{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:#102436;border-top:1px solid #ffffff12;font-size:12px;color:#b6cddd}
+.scanner-sale-total strong{color:#b9e9ff;font-size:14px}
+@media(max-width:600px){
+ .scanner-modal{padding:6px;align-items:center}
+ .scanner-card{width:100%;padding:10px;border-radius:15px;max-height:98dvh;overflow-y:auto}
+ .scanner-view{aspect-ratio:16/7;min-height:112px;max-height:22dvh}
+ .scanner-header{margin-bottom:8px}
+ .scanner-header h2{font-size:17px}
+ .scanner-status{font-size:10px;line-height:1.6}
+ .scanner-result{margin-top:8px;padding:8px 10px}
+ .scanner-result strong{font-size:16px}
+ .scanner-sale-items{max-height:28dvh}
+ .scanner-sale-row{padding:7px 9px}
+ .scanner-sale-qty button{width:30px;height:30px}
+ .scanner-actions{margin-top:8px}
+ .scanner-actions button{padding:10px 8px}
+}

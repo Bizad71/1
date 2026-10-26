@@ -228,6 +228,7 @@
     $("cartTotal").textContent=money(cart.reduce((s,x)=>s+x.quantity*x.salePrice,0))+" تومان";
     $("cartItems").classList.toggle("empty-state",!cart.length);
     $("cartItems").innerHTML=cart.length?cart.map(x=>`<div class="cart-row"><div><b>${escapeHtml(x.name)}</b><small>${money(x.salePrice)} تومان · هر عدد</small></div><div class="qty-control"><button type="button" data-cart-step="${x.productId}" data-delta="-1" aria-label="کم کردن تعداد">−</button><input type="number" min="1" step="1" value="${x.quantity}" data-cart-qty="${x.productId}" aria-label="تعداد ${escapeHtml(x.name)}"><button type="button" data-cart-step="${x.productId}" data-delta="1" aria-label="زیاد کردن تعداد">+</button></div><button class="cart-remove" data-cart-remove="${x.productId}" aria-label="حذف">×</button></div>`).join(""):'هنوز کالایی اضافه نشده.';
+    if (typeof renderScannerSaleList === "function") renderScannerSaleList();
   }
   function addToCart(product, quantity) {
     quantity=Math.floor(num(quantity));
@@ -279,7 +280,7 @@
   let scannerLastAcceptedAt = 0;
   let scannerUnlockTimer = null;
   let scannerScriptPromise = null;
-  let scannerPendingProduct = null;
+  let scannerSaleOrder = [];
 
   function loadScannerLibrary() {
     if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) return Promise.resolve();
@@ -316,9 +317,9 @@
   function openScanner(target) {
     scannerTarget = target === "sale" ? "sale" : "inventory";
     scannerCount = 0;
-    scannerPendingProduct = null;
-    $("scannerPending").classList.add("hidden");
-    $("scannerProductQty").value = "1";
+    scannerSaleOrder = [];
+    $("scannerSaleList").classList.toggle("hidden", scannerTarget !== "sale");
+    renderScannerSaleList();
     scannerLastValue = "";
     scannerLastSeenAt = 0;
     scannerLastAcceptedAt = 0;
@@ -328,7 +329,7 @@
     $("scannerCounter").textContent = "۰ اسکن";
     $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن پیوسته برای فروش" : "اسکن بارکد کالا";
     $("scannerHelp").textContent = scannerTarget === "sale"
-      ? "بارکد را بگیر؛ مشخصات کالا پایین تصویر می‌آید. تعداد را وارد کن و تأیید بزن؛ دوربین برای کالای بعدی روشن می‌ماند."
+      ? "هر بارکدِ ثبت‌شده در انبار خودکار به فاکتور اضافه می‌شود؛ برای تغییر تعداد از + و − کنار نام کالا استفاده کن. کالای جدید بالای فهرست می‌آید."
       : "بارکد را مقابل دوربین بگیر. پس از ثبت عدد، می‌توانی نام و مشخصات کالا را خودت وارد کنی.";
     $("scannerModal").classList.remove("hidden");
     $("scannerModal").setAttribute("aria-hidden", "false");
@@ -396,17 +397,9 @@
   function handleScannedBarcode(rawValue) {
     const value = digits(String(rawValue)).trim();
     if (!value) return;
-    // While the cashier is choosing quantity for a detected item, ignore other codes without
-    // replacing the pending barcode. Keep the current barcode locked while it remains in view.
-    if (scannerTarget === "sale" && scannerPendingProduct) {
-      if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
-      scannerUnlockTimer = setTimeout(() => { scannerLastValue = ""; scannerUnlockTimer = null; }, 750);
-      return;
-    }
     const now = Date.now();
     scannerLastSeenAt = now;
-    // Keep a code locked while it remains visible. Re-arm only after ~750 ms without
-    // any successful decode, so one item held in front of the camera is not added repeatedly.
+    // A barcode stays locked while it remains in view, preventing repeated additions.
     if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
     scannerUnlockTimer = setTimeout(() => { scannerLastValue = ""; scannerUnlockTimer = null; }, 750);
     if (value === scannerLastValue) return;
@@ -415,43 +408,78 @@
     scannerCount += 1;
     $("scannerResult").textContent = value;
     $("scannerCounter").textContent = scannerCount.toLocaleString("fa-IR") + " اسکن";
-    scannerStatus("بارکد خوانده شد؛ آماده اسکن بعدی.");
     if (scannerTarget === "inventory") {
       $("barcode").value = value;
       $("barcode").dispatchEvent(new Event("input", { bubbles: true }));
-      // Inventory mode only fills the barcode field; the user defines the product details.
       stopScanner(false).then(() => closeScanner(false));
       toast("بارکد خوانده شد؛ مشخصات کالا را وارد کن.");
       $("barcode").focus({ preventScroll: true });
       return;
     }
-    // Keep the camera active but pause accepting new products until this item is confirmed.
-    if (scannerPendingProduct) return;
-    $("saleLookup").value = value;
+
+    // Sales mode: only products already registered in inventory can enter the invoice.
     const normalized = normalizeBarcode(value);
     const product = db.products.find(p => normalizeBarcode(p.barcode) === normalized);
-    if (product) {
-      scannerPendingProduct = product;
-      $("scannerPending").classList.remove("hidden");
-      $("scannerProductName").textContent = product.name || "کالای بدون نام";
-      $("scannerProductBarcode").textContent = "بارکد: " + (product.barcode || value);
-      $("scannerProductStock").textContent = "موجودی: " + num(product.quantity).toLocaleString("fa-IR");
-      $("scannerProductPrice").textContent = money(product.salePrice) + " تومان";
-      $("scannerProductQty").value = "1";
-      $("scannerProductQty").max = String(Math.max(1, num(product.quantity)));
-      $("scannerLineTotal").textContent = money(num(product.salePrice)) + " تومان";
-      $("scannerProductMessage").classList.remove("error");
-      $("scannerProductMessage").textContent = "تعداد را وارد کن و تأیید را بزن؛ دوربین روشن می‌ماند.";
-      $("scannerConfirmProduct").disabled = num(product.quantity) < 1;
-      scannerStatus("کالا پیدا شد؛ تعداد را در کادر پایین تأیید کن.");
-      if ("vibrate" in navigator) { try { navigator.vibrate(45); } catch {} }
-    } else {
-      scannerStatus("بارکد " + value + " در فهرست کالاها نیست؛ ابتدا کالا را در انبار ثبت کن.");
-      $("scannerPending").classList.add("hidden");
-      showMatches(value.toLowerCase());
+    if (!product) {
+      scannerStatus("این بارکد در انبار ثبت نشده است؛ به فاکتور اضافه نشد.");
       toast("این بارکد در انبار ثبت نشده است.");
+      if ("vibrate" in navigator) { try { navigator.vibrate([35, 45, 35]); } catch {} }
+      return;
     }
+    if (num(product.quantity) < 1) {
+      scannerStatus("موجودی این کالا صفر است؛ به فاکتور اضافه نشد.");
+      toast("موجودی این کالا تمام شده است.");
+      return;
+    }
+    if (!addToCart(product, 1)) {
+      scannerStatus("موجودی کافی نیست؛ کالا به فاکتور اضافه نشد.");
+      return;
+    }
+    scannerSaleOrder = scannerSaleOrder.filter(id => id !== product.id);
+    scannerSaleOrder.unshift(product.id);
+    renderScannerSaleList();
+    $("saleLookup").value = "";
+    $("saleQty").value = "1";
+    $("saleMatches").classList.add("hidden");
+    scannerStatus("«" + product.name + "» به فاکتور اضافه شد؛ بارکد بعدی را نشان بده.");
+    if ("vibrate" in navigator) { try { navigator.vibrate(55); } catch {} }
   }
+  function renderScannerSaleList() {
+    const list = $("scannerSaleItems");
+    const total = $("scannerSaleTotal");
+    if (!list || !total) return;
+    const active = scannerSaleOrder
+      .map(id => cart.find(item => item.productId === id))
+      .filter(Boolean);
+    list.innerHTML = active.length ? active.map(item => `
+      <div class="scanner-sale-row">
+        <div class="scanner-sale-name"><b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.barcode || "بدون بارکد")} · ${money(item.salePrice)} تومان</small></div>
+        <div class="scanner-sale-qty">
+          <button type="button" data-scanner-cart-step="${item.productId}" data-delta="-1" aria-label="کم کردن ${escapeHtml(item.name)}">−</button>
+          <span>${num(item.quantity).toLocaleString("fa-IR")}</span>
+          <button type="button" data-scanner-cart-step="${item.productId}" data-delta="1" aria-label="زیاد کردن ${escapeHtml(item.name)}">+</button>
+        </div>
+      </div>`).join("") : '<p class="scanner-sale-empty">هنوز کالایی اسکن نشده است.</p>';
+    total.textContent = money(cart.reduce((sum, item) => sum + num(item.quantity) * num(item.salePrice), 0)) + " تومان";
+  }
+  $("scannerSaleItems").addEventListener("click", e => {
+    const button = e.target.closest("[data-scanner-cart-step]");
+    if (!button) return;
+    const id = button.dataset.scannerCartStep;
+    const item = cart.find(x => x.productId === id);
+    const product = db.products.find(x => x.id === id);
+    if (!item || !product) return;
+    const next = item.quantity + Number(button.dataset.delta);
+    if (next < 1) {
+      cart = cart.filter(x => x.productId !== id);
+      scannerSaleOrder = scannerSaleOrder.filter(x => x !== id);
+    } else if (next > num(product.quantity)) {
+      toast("موجودی کافی نیست.");
+      return;
+    } else item.quantity = next;
+    renderCart();
+    renderScannerSaleList();
+  });
   async function stopScanner(hideLoading = true) {
     scannerActive = false;
     if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
@@ -479,49 +507,6 @@
     scannerFacing = scannerFacing === "environment" ? "user" : "environment";
     await startScanner();
   }
-
-  function updateScannerLineTotal() {
-    if (!scannerPendingProduct) return;
-    const qty = Math.max(0, Math.floor(num($("scannerProductQty").value)));
-    $("scannerLineTotal").textContent = money(num(scannerPendingProduct.salePrice) * qty) + " تومان";
-    const available = num(scannerPendingProduct.quantity);
-    const invalid = qty < 1 || qty > available;
-    $("scannerProductMessage").classList.toggle("error", invalid);
-    $("scannerProductMessage").textContent = qty < 1
-      ? "تعداد باید حداقل ۱ باشد."
-      : qty > available
-        ? "موجودی کافی نیست؛ موجودی فعلی " + available.toLocaleString("fa-IR") + " عدد است."
-        : "پس از تأیید، کالا به فاکتور اضافه می‌شود و دوربین روشن می‌ماند.";
-    $("scannerConfirmProduct").disabled = invalid;
-  }
-  function confirmScannedProduct() {
-    if (!scannerPendingProduct) return;
-    const product = scannerPendingProduct;
-    const qty = Math.floor(num($("scannerProductQty").value));
-    if (qty < 1 || qty > num(product.quantity)) { updateScannerLineTotal(); return; }
-    if (!addToCart(product, qty)) { updateScannerLineTotal(); return; }
-    scannerPendingProduct = null;
-    $("scannerPending").classList.add("hidden");
-    $("saleLookup").value = "";
-    $("saleQty").value = "1";
-    $("saleMatches").classList.add("hidden");
-    $("scannerProductQty").value = "1";
-    scannerStatus("«" + product.name + "» به فاکتور اضافه شد؛ بارکد بعدی را نشان بده.");
-    // Do not close or restart the camera. Keep the just-confirmed barcode locked until it leaves view.
-    if ("vibrate" in navigator) { try { navigator.vibrate(70); } catch {} }
-  }
-  $("scannerProductQty").addEventListener("input", updateScannerLineTotal);
-  function stepScannerQuantity(delta) {
-    if (!scannerPendingProduct) return;
-    const current = Math.floor(num($("scannerProductQty").value)) || 1;
-    const next = Math.max(1, Math.min(num(scannerPendingProduct.quantity), current + delta));
-    $("scannerProductQty").value = String(next);
-    updateScannerLineTotal();
-  }
-  $("scannerQtyMinus").addEventListener("click", () => stepScannerQuantity(-1));
-  $("scannerQtyPlus").addEventListener("click", () => stepScannerQuantity(1));
-  $("scannerConfirmProduct").addEventListener("click", confirmScannedProduct);
-  $("scannerProductQty").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); confirmScannedProduct(); } });
 
   function exportBackup() {
     const blob=new Blob([JSON.stringify({format:"BIZAAP-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
@@ -603,14 +588,14 @@
     item.quantity=qty;renderCart();
   });
   $("cartItems").addEventListener("click",e=>{
-    const b=e.target.closest("[data-cart-remove]");if(b){cart=cart.filter(x=>x.productId!==b.dataset.cartRemove);renderCart();return;}
+    const b=e.target.closest("[data-cart-remove]");if(b){cart=cart.filter(x=>x.productId!==b.dataset.cartRemove);scannerSaleOrder=scannerSaleOrder.filter(x=>x!==b.dataset.cartRemove);renderCart();return;}
     const step=e.target.closest("[data-cart-step]");if(!step)return;
     const id=step.dataset.cartStep, item=cart.find(x=>x.productId===id), p=db.products.find(x=>x.id===id);if(!item||!p)return;
     const next=item.quantity+Number(step.dataset.delta);
-    if(next<1){cart=cart.filter(x=>x.productId!==id);}else if(next>num(p.quantity)){toast("موجودی کافی نیست.");return;}else item.quantity=next;
+    if(next<1){cart=cart.filter(x=>x.productId!==id);scannerSaleOrder=scannerSaleOrder.filter(x=>x!==id);}else if(next>num(p.quantity)){toast("موجودی کافی نیست.");return;}else item.quantity=next;
     renderCart();
   });
-  $("clearCartBtn").addEventListener("click",()=>{cart=[];renderCart();});
+  $("clearCartBtn").addEventListener("click",()=>{cart=[];scannerSaleOrder=[];renderCart();});
   $("checkoutBtn").addEventListener("click",()=>{
     if(!cart.length){toast("فاکتور خالی است.");return;}
     if(!loadDb()){toast("دیتابیس متصل نیست؛ فروش ثبت نشد.");return;}
@@ -619,7 +604,7 @@
     items.forEach(item=>{const p=db.products.find(x=>x.id===item.productId);p.quantity-=item.quantity;db.movements.push({id:"m_"+Date.now()+"_"+Math.random().toString(36).slice(2,5),productId:p.id,type:"sale",delta:-item.quantity,at:Date.now(),note:"فروش"});});
     const invoice={id:"i_"+Date.now(),number:"BIZAAP-"+String(db.invoices.length+1).padStart(5,"0"),createdAt:Date.now(),items,total:items.reduce((s,x)=>s+x.quantity*x.salePrice,0)};
     db.invoices.push(invoice);
-    if(saveDb()){cart=[];renderAll();goPage("sales");toast(`فاکتور ${invoice.number} ثبت شد.`);}
+    if(saveDb()){cart=[];scannerSaleOrder=[];renderAll();goPage("sales");toast(`فاکتور ${invoice.number} ثبت شد.`);}
   });
   $("vipToggle").addEventListener("change",e=>{db.settings.vipLocal=e.target.checked;if(saveDb())renderVip();});
   // The user may scan with a keyboard-emulating scanner or return a shared/copied barcode.

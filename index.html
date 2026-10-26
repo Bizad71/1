@@ -114,17 +114,10 @@
         <div><small>آخرین بارکد خوانده‌شده</small><strong id="scannerResult">—</strong></div>
         <span id="scannerCounter" class="scanner-counter">۰ اسکن</span>
       </div>
-      <section id="scannerPending" class="scanner-pending hidden" aria-live="polite">
-        <div class="scanner-pending-top"><div><small>کالای شناسایی‌شده</small><h3 id="scannerProductName">—</h3><p id="scannerProductBarcode">بارکد: —</p></div><span id="scannerProductStock" class="scanner-stock">موجودی: —</span></div>
-        <div class="scanner-product-prices"><div><small>قیمت فروش هر عدد</small><strong id="scannerProductPrice">—</strong></div><div><small>جمع این ردیف</small><strong id="scannerLineTotal">—</strong></div></div>
-        <label class="scanner-qty-label" for="scannerProductQty">تعداد موردنظر</label>
-        <div class="scanner-qty-control">
-          <button id="scannerQtyMinus" type="button" class="scanner-qty-step" aria-label="کم کردن تعداد">−</button>
-          <input id="scannerProductQty" class="scanner-product-qty" type="number" inputmode="numeric" min="1" step="1" value="1" />
-          <button id="scannerQtyPlus" type="button" class="scanner-qty-step" aria-label="زیاد کردن تعداد">+</button>
-        </div>
-        <p id="scannerProductMessage" class="scanner-product-message">تعداد را وارد کن و تأیید را بزن.</p>
-        <button id="scannerConfirmProduct" type="button" class="primary-btn full">تأیید و افزودن به فاکتور</button>
+      <section id="scannerSaleList" class="scanner-sale-list hidden" aria-live="polite">
+        <div class="scanner-sale-list-heading"><strong>کالاهای فاکتور</strong><small>کالای جدید در ابتدای فهرست</small></div>
+        <div id="scannerSaleItems" class="scanner-sale-items"><p class="scanner-sale-empty">هنوز کالایی اسکن نشده است.</p></div>
+        <div class="scanner-sale-total"><span>جمع فاکتور</span><strong id="scannerSaleTotal">۰ تومان</strong></div>
       </section>
       <p id="scannerHelp" class="scanner-help">بارکد را مقابل دوربین بگیر. پس از هر بارکد، اسکنر برای کالای بعدی فعال می‌ماند.</p>
       <div class="scanner-actions">
