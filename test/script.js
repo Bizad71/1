@@ -8,8 +8,9 @@
   const dateOf = (value) => { const d = new Date(value); return Number.isNaN(d.getTime()) ? null : d; };
   const jalaliFormatter = new Intl.DateTimeFormat('en-u-ca-persian-nu-latn', {year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'});
   const faDigits = (s) => String(s ?? '').replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+  const toFaDigits = (s) => String(s).replace(/\d/g, c => '۰۱۲۳۴۵۶۷۸۹'[Number(c)]);
   const jalaliParts = (d) => { const p = Object.fromEntries(jalaliFormatter.formatToParts(d).map(x=>[x.type,x.value])); return {year:Number(p.year),month:Number(p.month),day:Number(p.day)}; };
-  const jalaliLabel = (d, monthOnly=false) => { if(!d || Number.isNaN(d.getTime())) return 'نامشخص'; const p=jalaliParts(d); return monthOnly ? `${p.year}/${String(p.month).padStart(2,'0')}` : `${p.year}/${String(p.month).padStart(2,'0')}/${String(p.day).padStart(2,'0')}`; };
+  const jalaliLabel = (d, monthOnly=false) => { if(!d || Number.isNaN(d.getTime())) return 'نامشخص'; const p=jalaliParts(d); return toFaDigits(monthOnly ? `${p.year}/${String(p.month).padStart(2,'0')}` : `${p.year}/${String(p.month).padStart(2,'0')}/${String(p.day).padStart(2,'0')}`); };
   const jalaliInputToDate = (value, end=false) => { if(!value) return null; const m=faDigits(value).trim().match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/); if(!m) throw new Error('تاریخ را به شکل شمسی سال/ماه/روز وارد کن؛ نمونه: ۱۴۰۵/۰۷/۳۰'); const jy=+m[1], jm=+m[2], jd=+m[3]; if(jm<1||jm>12||jd<1||jd>31) throw new Error('تاریخ شمسی واردشده معتبر نیست.'); const start=Date.UTC(jy+621,0,1), stop=Date.UTC(jy+623,0,1); for(let t=start;t<stop;t+=86400000){const d=new Date(t), q=jalaliParts(d); if(q.year===jy&&q.month===jm&&q.day===jd) return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),end?23:0,end?59:0,end?59:0,end?999:0);} throw new Error('این تاریخ شمسی وجود ندارد؛ روز و ماه را بررسی کن.'); };
   const dateLabel = (value) => { const d = dateOf(value); return d ? jalaliLabel(d) : 'نامشخص'; };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -141,7 +142,7 @@
     const panel = $('trendPanel');
     if (a.historyDays < 30) { panel.innerHTML=`<div class="trend-empty">سابقهٔ فروش فعلی حدود <strong>${money(a.historyDays)} روز</strong> است. نمودار مقایسهٔ روند پس از حداقل ۳۰ روز سابقهٔ واقعی قابل‌اتکاتر می‌شود. این محدودیت مانع محاسبهٔ آمار فعلی نیست.</div>`; return; }
     const now = new Date(); const values = [];
-    for (let i=6;i>=0;i--) { const d = new Date(now.getFullYear(),now.getMonth(),now.getDate()-i*7); const start = new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(); const end = start+7*86400000; const sales = a.validInvoices.filter(inv=>num(inv.createdAt)>=start && num(inv.createdAt)<end).reduce((sum,inv)=>sum+num(inv.total),0); values.push({label: new Intl.DateTimeFormat('fa-IR',{day:'numeric',month:'short'}).format(d),sales}); }
+    for (let i=6;i>=0;i--) { const d = new Date(now.getFullYear(),now.getMonth(),now.getDate()-i*7); const start = new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(); const end = start+7*86400000; const sales = a.validInvoices.filter(inv=>{const when=dateOf(inv.createdAt);return when&&when.getTime()>=start&&when.getTime()<end;}).reduce((sum,inv)=>sum+invoiceSales(inv),0); values.push({label: jalaliLabel(d).slice(5),sales}); }
     const max = Math.max(1,...values.map(v=>v.sales));
     panel.innerHTML=`<div class="trend-bars">${values.map(v=>`<div class="trend-bar-wrap"><div class="trend-bar" title="${money(v.sales)}" style="height:${Math.max(3,v.sales/max*80)}%"></div><span class="trend-label">${esc(v.label)}</span></div>`).join('')}</div><p class="trend-caption">مجموع فروش هر بازهٔ هفت‌روزه، بر اساس تاریخ ثبت فاکتور.</p>`;
   }
