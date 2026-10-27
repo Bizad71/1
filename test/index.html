@@ -19,15 +19,15 @@
         <div class="hero-copy">
           <span class="eyebrow">SMART STORE ANALYTICS</span>
           <h1>تصمیم‌های بهتر برای فروشگاهت</h1>
-          <p>پوشهٔ دیتابیس فروشگاه را وصل کن تا فروش، سود، موجودی و کالاهای نیازمند توجه بررسی شوند. فایل‌های اصلی فقط خوانده می‌شوند و تغییری نمی‌کنند.</p>
+          <p>چهار فایل JSON دیتابیس را با انتخاب‌گر گوشی انتخاب کن تا فروش، سود، موجودی و کالاهای نیازمند توجه بررسی شوند. فایل‌های اصلی فقط خوانده می‌شوند و تغییری نمی‌کنند.</p>
           <div class="connect-actions">
-            <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> اتصال پوشهٔ دیتابیس</button>
+            <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> انتخاب فایل‌های دیتابیس</button>
             <button id="refreshBtn" class="btn btn-secondary" type="button" disabled>به‌روزرسانی تحلیل</button>
           </div>
-          <p id="statusMessage" class="status-message" role="status">برای شروع، پوشه‌ای را انتخاب کن که فایل‌های biza-*.json داخل آن هستند.</p>
+          <p id="statusMessage" class="status-message" role="status">برای شروع، چهار فایل JSON دیتابیس را انتخاب کن.</p>
         </div>
         <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="core"><span>AI</span></div><i class="node node-one"></i><i class="node node-two"></i><i class="node node-three"></i></div>
-        <input id="folderInput" type="file" webkitdirectory directory multiple hidden>
+        <input id="folderInput" type="file" accept=".json,application/json" multiple hidden>
       </section>
 
       <section id="dashboard" class="dashboard" hidden>
@@ -68,7 +68,7 @@
         </section>
       </section>
 
-      <section id="welcomeState" class="welcome-state"><div class="welcome-icon">▤</div><h2>اطلاعات فروشگاهت را بررسی کن</h2><p>برای شروع، پوشهٔ دیتابیس را انتخاب کن. این صفحه فایل‌های کالاها، فاکتورها و گردش انبار را می‌خواند و گزارش را در همین مرورگر می‌سازد.</p><div class="file-pills"><span>biza-products.json</span><span>biza-invoices.json</span><span>biza-stock-movements.json</span><span>biza-settings.json</span></div></section>
+      <section id="welcomeState" class="welcome-state"><div class="welcome-icon">▤</div><h2>اطلاعات فروشگاهت را بررسی کن</h2><p>برای شروع، چهار فایل JSON دیتابیس را انتخاب کن. این صفحه فایل‌های کالاها، فاکتورها و گردش انبار را می‌خواند و گزارش را در همین مرورگر می‌سازد.</p><div class="file-pills"><span>biza-products.json</span><span>biza-invoices.json</span><span>biza-stock-movements.json</span><span>biza-settings.json</span></div></section>
       <footer><span>Mahshop · Store Management</span><span>اطلاعات فقط خوانده می‌شوند و به سرور ارسال نمی‌شوند.</span></footer>
     </main>
   </div>

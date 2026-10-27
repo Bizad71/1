@@ -33,7 +33,8 @@
     if (missing.length) throw new Error(`این فایل‌ها در پوشهٔ انتخاب‌شده پیدا نشدند: ${missing.join('، ')}`);
     return Promise.all(FILES.map(async name => [name, parseJSON(await byName.get(name).text(), name)])).then(entries => Object.fromEntries(entries));
   }
-  function applyData(data) {
+  function applyData(data, shouldPersist = true) {
+    if (shouldPersist) { try { sessionStorage.setItem('mahshopAnalyticsData', JSON.stringify(data)); } catch (_) { /* storage may be unavailable or full; current session still works */ } }
     state.products = normalizeArray(data['biza-products.json'], 'biza-products.json');
     state.invoices = normalizeArray(data['biza-invoices.json'], 'biza-invoices.json');
     state.movements = normalizeArray(data['biza-stock-movements.json'], 'biza-stock-movements.json');
@@ -57,10 +58,11 @@
         setStatus(err.message || 'اتصال پوشه انجام نشد.', 'error'); return;
       }
     }
+    setStatus('در این مرورگر موبایل انتخاب مستقیم پوشه پشتیبانی نمی‌شود؛ چهار فایل JSON دیتابیس را با انتخاب‌گر فایل انتخاب کن.');
     $('folderInput').click();
   }
   async function refreshData() {
-    if (!state.directoryHandle) { $('folderInput').click(); return; }
+    if (!state.directoryHandle) { setStatus('برای تازه‌سازی، چهار فایل JSON دیتابیس را دوباره انتخاب کن.'); $('folderInput').click(); return; }
     try { setStatus('در حال به‌روزرسانی…'); const data = await readFromDirectoryHandle(state.directoryHandle); applyData(data); }
     catch (err) { setStatus(err.message || 'خواندن دوبارهٔ فایل‌ها ناموفق بود.', 'error'); }
   }
@@ -240,4 +242,6 @@
   });
   $('applyPeriod').addEventListener('click', () => { try { if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); } catch(e) { setStatus(e.message || 'تاریخ واردشده معتبر نیست.','error'); } });
   $('clearPeriod').addEventListener('click', () => { $('dateFrom').value=''; $('dateTo').value=''; $('periodMode').value='month'; if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); });
+  // Mobile browsers may suspend/reload the page while the system file picker is open.
+  try { const saved = sessionStorage.getItem('mahshopAnalyticsData'); if (saved) { const parsed = JSON.parse(saved); if (parsed && FILES.every(name => Object.prototype.hasOwnProperty.call(parsed, name))) { applyData(parsed, false); setStatus('اطلاعات آخرین اتصال در این نشست بازیابی شد. برای تازه‌سازی، فایل‌های دیتابیس را دوباره انتخاب کن.', 'success'); } } } catch (_) { /* ignore stale or unavailable session cache */ }
 })();
