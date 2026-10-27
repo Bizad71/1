@@ -96,7 +96,7 @@
     $('stockValue').textContent = money(a.stockValue);
     $('invoiceCount').textContent = `${money(a.validInvoices.length)} فاکتور ثبت‌شده · امروز ${money(a.todayInvoices)} فاکتور`;
     $('dataDate').textContent = `آخرین بررسی: ${dateLabel(Date.now())}`;
-    renderRecommendations(a); renderTopProducts(a); renderInventory(a); renderTrend(a);
+    renderRecommendations(a); renderTopProducts(a); renderInventory(a); renderTrend(a); renderManagerTools(a);
   }
   function renderRecommendations(a) {
     const recs = [];
@@ -140,16 +140,37 @@
     const max = Math.max(1,...values.map(v=>v.sales));
     panel.innerHTML=`<div class="trend-bars">${values.map(v=>`<div class="trend-bar-wrap"><div class="trend-bar" title="${money(v.sales)}" style="height:${Math.max(3,v.sales/max*80)}%"></div><span class="trend-label">${esc(v.label)}</span></div>`).join('')}</div><p class="trend-caption">مجموع فروش هر بازهٔ هفت‌روزه، بر اساس تاریخ ثبت فاکتور.</p>`;
   }
-  function answerQuestion(question) {
-    const q = question.trim().toLowerCase(); if (!q) return 'سؤالت را بنویس تا بر اساس داده‌های پوشه پاسخ بدهم.';
-    const a = getAnalytics();
-    if (/سود|سودآور|پر سود|پرسود/.test(q)) { const p=[...a.products].filter(x=>x._sold>0).sort((x,y)=>y._profit-x._profit)[0]; return p ? `بیشترین سود ناخالص ثبت‌شده مربوط به «${p.name}» است: ${money(p._profit)}. این عدد از قیمت خرید و فروش درج‌شده در اقلام فاکتورها محاسبه شده است.` : 'برای محاسبهٔ سود، فاکتور فروش معتبر در پوشه پیدا نشد.'; }
-    if (/پرفروش|بیشتر فروخته|بیشترین فروش|فروش بالا/.test(q)) { const p=[...a.products].sort((x,y)=>y._sold-x._sold)[0]; return p && p._sold>0 ? `بیشترین تعداد فروش ثبت‌شده مربوط به «${p.name}» است: ${money(p._sold)} عدد.` : 'فروش ثبت‌شده‌ای برای مقایسهٔ کالاها وجود ندارد.'; }
-    if (/کم فروش|کم‌فروش|نفروخته|بدون فروش|راکد|خواب سرمایه/.test(q)) { const list=a.products.filter(p=>p._qty>0&&p._sold===0); return list.length ? `کالاهایی که در فاکتورهای موجود فروش ندارند و هنوز موجودی دارند: ${list.slice(0,10).map(p=>`${p.name} (${money(p._qty)} عدد)`).join('، ')}. این به معنی نبود تقاضای قطعی نیست؛ فقط در فاکتورهای همین پوشه فروشی برایشان ثبت نشده است.` : 'با اطلاعات فعلی کالای دارای موجودی و بدون فروش ثبت‌شده پیدا نشد.'; }
-    if (/موجودی|انبار|چند تا|تعداد کالا/.test(q)) { const list=[...a.products].sort((x,y)=>x._qty-y._qty); return `تعداد کالاهای ثبت‌شده ${money(a.products.length)} و مجموع موجودی ${money(a.stockUnits)} عدد است. ${list.length?`کمترین موجودی مربوط به ${list.slice(0,3).map(p=>`${p.name} (${money(p._qty)})`).join('، ')} است.`:''}`; }
-    if (/خرید|سفارش|بخر|تهیه/.test(q)) { const list=a.products.filter(p=>p._qty<=5).sort((x,y)=>x._qty-y._qty); return list.length ? `برای بررسی خرید مجدد، این کالاها موجودی کم دارند: ${list.slice(0,8).map(p=>`${p.name} (${money(p._qty)} عدد)`).join('، ')}. مقدار سفارش نهایی را با سرعت فروش، زمان تأمین و حداقل سفارش تأمین‌کننده تعیین کن.` : 'هیچ کالایی با موجودی ۵ عدد یا کمتر پیدا نشد. برای پیشنهاد مقدار سفارش دقیق، باید زمان تأمین و حداقل موجودی هر کالا هم مشخص باشد.'; }
-    if (/فروش|درآمد|چقدر/.test(q)) return `مجموع فروش فاکتورهای موجود ${money(a.totalSales)}، سود ناخالص محاسبه‌شده ${money(a.totalProfit)} و تعداد فاکتورها ${money(a.validInvoices.length)} است. این آمار فقط بر اساس فایل‌هایی است که وصل کرده‌ای.`;
-    return 'در این نسخه می‌توانم دربارهٔ مجموع فروش، سود ناخالص، پرفروش‌ترین کالا، موجودی انبار، کالاهای بدون فروش ثبت‌شده و کالاهای کم‌موجودی پاسخ بدهم. برای پاسخ دقیق‌تر، سؤالت را در یکی از این موضوع‌ها بپرس.';
+  function invoiceDate(inv){ return dateOf(inv.createdAt); }
+  function invoiceSales(inv){ if(Array.isArray(inv.items)) return inv.items.reduce((s,it)=>s+Math.max(0,num(it.quantity))*num(it.salePrice),0); return num(inv.total); }
+  function periodInvoices(a){
+    const from=$('dateFrom').value ? new Date($('dateFrom').value+'T00:00:00').getTime() : -Infinity;
+    const to=$('dateTo').value ? new Date($('dateTo').value+'T23:59:59.999').getTime() : Infinity;
+    return a.validInvoices.filter(i=>{const d=invoiceDate(i);return d&&d.getTime()>=from&&d.getTime()<=to;});
+  }
+  function listMarkup(items,empty='موردی با داده‌های فعلی پیدا نشد.'){return items.length?items.map((x,i)=>`<div class="tool-row"><span class="tool-rank">${money(i+1)}</span><span class="tool-name">${esc(x.name||x.label||'—')}</span><strong>${esc(x.value||'')}</strong></div>`).join(''):`<p class="empty">${empty}</p>`;}
+  function renderManagerTools(a){
+    const filtered=periodInvoices(a), mode=$('periodMode').value;
+    const sumSales=filtered.reduce((s,i)=>s+invoiceSales(i),0), sumProfit=filtered.reduce((s,i)=>s+(Array.isArray(i.items)?i.items.reduce((t,it)=>t+(num(it.salePrice)-num(it.purchasePrice))*Math.max(0,num(it.quantity)),0):0),0);
+    const avg=filtered.length?sumSales/filtered.length:0;
+    $('periodSummary').innerHTML=[['فروش بازه',money(sumSales)],['سود ناخالص بازه',money(sumProfit)],['تعداد فاکتور',money(filtered.length)],['میانگین فاکتور',money(avg)],['حاشیه سود',sumSales?money(sumProfit/sumSales*100)+'٪':'—'],['تعداد واحد فروخته‌شده',money(filtered.reduce((s,i)=>s+(i.items||[]).reduce((t,it)=>t+Math.max(0,num(it.quantity)),0),0))]].map(([k,v])=>`<article class="tool-kpi"><span>${k}</span><strong>${v}</strong></article>`).join('');
+    const buckets=new Map(); filtered.forEach(i=>{const d=invoiceDate(i);if(!d)return;const key=mode==='month'?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const b=buckets.get(key)||{key,sales:0,profit:0,count:0,units:0};b.sales+=invoiceSales(i);b.count++;(i.items||[]).forEach(it=>{const q=Math.max(0,num(it.quantity));b.units+=q;b.profit+=(num(it.salePrice)-num(it.purchasePrice))*q;});buckets.set(key,b);});
+    const rows=[...buckets.values()].sort((x,y)=>x.key.localeCompare(y.key));
+    $('periodTable').innerHTML=rows.length?`<table><thead><tr><th>${mode==='month'?'ماه':'روز'}</th><th>فروش</th><th>سود ناخالص</th><th>فاکتور</th><th>تعداد واحد</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.key)}</td><td>${money(r.sales)}</td><td>${money(r.profit)}</td><td>${money(r.count)}</td><td>${money(r.units)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">در بازهٔ انتخابی فاکتور معتبری وجود ندارد.</p>';
+    const days=new Map(),months=new Map();a.validInvoices.forEach(i=>{const d=invoiceDate(i);if(!d)return;const dk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,mk=dk.slice(0,7);days.set(dk,(days.get(dk)||0)+invoiceSales(i));months.set(mk,(months.get(mk)||0)+invoiceSales(i));});
+    $('bestDays').innerHTML=listMarkup([...days].sort((x,y)=>y[1]-x[1]).slice(0,5).map(([name,v])=>({name,value:money(v)})));
+    $('bestMonths').innerHTML=listMarkup([...months].sort((x,y)=>y[1]-x[1]).slice(0,5).map(([name,v])=>({name,value:money(v)})));
+    $('profitLeaders').innerHTML=listMarkup([...a.products].filter(p=>p._sold>0).sort((x,y)=>y._profit-x._profit).slice(0,5).map(p=>({name:p.name,value:money(p._profit)})));
+    $('unitLeaders').innerHTML=listMarkup([...a.products].filter(p=>p._sold>0).sort((x,y)=>y._sold-x._sold).slice(0,5).map(p=>({name:p.name,value:money(p._sold)+' عدد'})));
+    $('noSalesTools').innerHTML=listMarkup(a.products.filter(p=>p._qty>0&&p._sold===0).slice(0,8).map(p=>({name:p.name,value:money(p._qty)+' موجودی'})));
+    $('lowStockTools').innerHTML=listMarkup(a.products.filter(p=>p._qty<=5).sort((x,y)=>x._qty-y._qty).slice(0,8).map(p=>({name:p.name,value:money(p._qty)+' عدد'})));
+    $('deadStockTools').innerHTML=listMarkup(a.products.filter(p=>p._qty>0&&p._sold===0).sort((x,y)=>(y._qty*num(y.purchasePrice))-(x._qty*num(x.purchasePrice))).slice(0,8).map(p=>({name:p.name,value:money(p._qty*num(p.purchasePrice))+' ارزش خرید'})));
+    $('kpiTools').innerHTML=listMarkup([{name:'میانگین مبلغ فاکتور',value:money(a.validInvoices.length?a.totalSales/a.validInvoices.length:0)},{name:'میانگین سود فاکتور',value:money(a.validInvoices.length?a.totalProfit/a.validInvoices.length:0)},{name:'حاشیه سود ناخالص',value:(a.totalSales?money(a.totalProfit/a.totalSales*100):'۰')+'٪'},{name:'تعداد فاکتورهای امروز',value:money(a.todayInvoices)},{name:'تعداد واحد فروخته‌شده',value:money(a.totalSoldUnits)}]);
+    $('reorderTools').innerHTML=listMarkup(a.products.filter(p=>p._qty<=5).sort((x,y)=>x._qty-y._qty).slice(0,8).map(p=>({name:p.name,value:'بررسی سفارش · موجودی '+money(p._qty)})),'فعلاً کالایی با موجودی ۵ عدد یا کمتر نیست.');
+    const current=filtered.reduce((s,i)=>s+invoiceSales(i),0);
+    const span=$('dateFrom').value&&$('dateTo').value?Math.max(1,new Date($('dateTo').value+'T00:00:00')-new Date($('dateFrom').value+'T00:00:00')+86400000):null;
+    let previous='برای مقایسهٔ دقیق، تاریخ شروع و پایان را انتخاب کن.';
+    if(span){const currentStart=new Date($('dateFrom').value+'T00:00:00').getTime();const prevStart=currentStart-span;const prevEnd=currentStart-1;const old=a.validInvoices.filter(i=>{const d=invoiceDate(i);return d&&d.getTime()>=prevStart&&d.getTime()<=prevEnd;}).reduce((s,i)=>s+invoiceSales(i),0);const delta=old?((current-old)/old*100):null;previous=`فروش دورهٔ انتخابی: ${money(current)}؛ دورهٔ قبل: ${money(old)}؛ تغییر: ${delta===null?'مبنای مقایسه ندارد':(delta>0?'+':'')+money(delta)+'٪'}.`}
+    $('compareTools').innerHTML=`<p class="tool-note">${esc(previous)}</p>`;
   }
 
   $('connectBtn').addEventListener('click', connectFolder);
@@ -160,5 +181,6 @@
     catch (err) { setStatus(err.message || 'خواندن فایل‌ها ناموفق بود.', 'error'); }
     event.target.value = '';
   });
-  $('askForm').addEventListener('submit', (event) => { event.preventDefault(); $('answerBox').textContent = answerQuestion($('questionInput').value); });
+  $('applyPeriod').addEventListener('click', () => { if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); });
+  $('clearPeriod').addEventListener('click', () => { $('dateFrom').value=''; $('dateTo').value=''; $('periodMode').value='month'; if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); });
 })();

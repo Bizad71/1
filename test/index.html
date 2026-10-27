@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07111f">
-  <title>بیزااپ | مدیریت هوشمند</title>
+  <meta name="theme-color" content="#05070d">
+  <title>مه‌شاپ | مرکز فرماندهی تحلیل</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">B</span><span><strong>بیزااپ</strong><small>مدیریت هوشمند</small></span></a>
+      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">M</span><span><strong>مه‌شاپ</strong><small>مرکز فرماندهی تحلیل</small></span></a>
       <span class="local-tag"><i></i> تحلیل محلی اطلاعات</span>
     </header>
 
@@ -46,9 +46,23 @@
 
         <section class="panel table-panel"><div class="panel-heading"><div><span class="eyebrow">INVENTORY WATCH</span><h3>وضعیت کالاها</h3></div><span id="inventoryCount" class="count-chip">۰ کالا</span></div><div class="table-wrap"><table><thead><tr><th>نام کالا</th><th>موجودی</th><th>فروش ثبت‌شده</th><th>سود واحد</th><th>وضعیت</th></tr></thead><tbody id="inventoryRows"><tr><td colspan="5" class="empty">ابتدا پوشهٔ دیتابیس را متصل کن.</td></tr></tbody></table></div></section>
 
-        <section class="content-grid lower-grid">
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">SALES TREND</span><h3>روند فروش</h3></div></div><div id="trendPanel" class="trend-panel"><div class="trend-empty">بعد از اتصال پوشه، وضعیت سابقهٔ فروش نمایش داده می‌شود.</div></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">ASK YOUR STORE</span><h3>پرسش از اطلاعات فروشگاه</h3></div><span class="heading-icon">✧</span></div><form id="askForm" class="ask-form"><label for="questionInput">سؤالت را دربارهٔ فروشگاه بنویس</label><div class="ask-input-row"><input id="questionInput" type="text" placeholder="مثلاً کدام کالا بیشترین سود را داشته؟" autocomplete="off"><button class="btn btn-primary" type="submit">پاسخ</button></div></form><div id="answerBox" class="answer-box">پاسخ‌ها بر اساس اطلاعات همین پوشه و محاسبات محلی ارائه می‌شوند.</div><p class="tiny-note">این نسخه بدون ارسال اطلاعات به سرویس بیرونی کار می‌کند؛ پاسخ‌گویی آن مبتنی بر قواعد و آمار محلی است، نه مدل گفت‌وگوی آنلاین.</p></section>
+        <section class="panel content-panel period-panel">
+          <div class="panel-heading"><div><span class="eyebrow">TIME MACHINE</span><h3>گزارش روزانه و ماهانه</h3></div><span class="heading-icon">◷</span></div>
+          <div class="filter-row"><label>از تاریخ <input id="dateFrom" type="date"></label><label>تا تاریخ <input id="dateTo" type="date"></label><label>دورهٔ مقایسه <select id="periodMode"><option value="day">روزانه</option><option value="month" selected>ماهانه</option></select></label><button id="applyPeriod" class="btn btn-primary" type="button">اعمال بازه</button><button id="clearPeriod" class="btn btn-secondary" type="button">کل سابقه</button></div>
+          <div id="periodSummary" class="tool-grid"><p class="empty">پس از اتصال پوشه، گزارش زمانی اینجا نمایش داده می‌شود.</p></div>
+          <div id="periodTable" class="table-wrap"></div>
+        </section>
+        <section class="content-grid tools-grid">
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 01</span><h3>روزهای پرفروش</h3></div></div><div id="bestDays" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 02</span><h3>بهترین ماه‌ها</h3></div></div><div id="bestMonths" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 03</span><h3>سودآورترین کالاها</h3></div></div><div id="profitLeaders" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 04</span><h3>بیشترین تعداد فروش</h3></div></div><div id="unitLeaders" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 05</span><h3>کالاهای بدون فروش</h3></div></div><div id="noSalesTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 06</span><h3>هشدار موجودی کم</h3></div></div><div id="lowStockTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 07</span><h3>سرمایه خوابیده در انبار</h3></div></div><div id="deadStockTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 08</span><h3>شاخص‌های عملکرد</h3></div></div><div id="kpiTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 09</span><h3>فهرست پیشنهادی خرید</h3></div></div><div id="reorderTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 10</span><h3>مقایسه با دورهٔ قبل</h3></div></div><div id="compareTools" class="tool-list"></div></section>
         </section>
       </section>
 
