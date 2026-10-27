@@ -48,7 +48,7 @@
 
         <section class="panel content-panel period-panel">
           <div class="panel-heading"><div><span class="eyebrow">TIME MACHINE</span><h3>گزارش روزانه و ماهانه</h3></div><span class="heading-icon">◷</span></div>
-          <div class="filter-row"><label>از تاریخ <input id="dateFrom" type="date"></label><label>تا تاریخ <input id="dateTo" type="date"></label><label>دورهٔ مقایسه <select id="periodMode"><option value="day">روزانه</option><option value="month" selected>ماهانه</option></select></label><button id="applyPeriod" class="btn btn-primary" type="button">اعمال بازه</button><button id="clearPeriod" class="btn btn-secondary" type="button">کل سابقه</button></div>
+          <div class="filter-row"><label>از تاریخ شمسی <input id="dateFrom" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۷/۰۱" aria-label="از تاریخ شمسی" autocomplete="off"></label><label>تا تاریخ شمسی <input id="dateTo" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۷/۳۰" aria-label="تا تاریخ شمسی" autocomplete="off"></label><label>گروه‌بندی گزارش <select id="periodMode"><option value="day">روزانه</option><option value="month" selected>ماهانه</option></select></label><button id="applyPeriod" class="btn btn-primary" type="button">اعمال بازه</button><button id="clearPeriod" class="btn btn-secondary" type="button">کل سابقه</button></div>
           <div id="periodSummary" class="tool-grid"><p class="empty">پس از اتصال پوشه، گزارش زمانی اینجا نمایش داده می‌شود.</p></div>
           <div id="periodTable" class="table-wrap"></div>
         </section>

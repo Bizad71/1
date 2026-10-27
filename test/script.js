@@ -6,7 +6,12 @@
   const money = (n) => new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(Number(n) || 0);
   const num = (n) => Number.isFinite(Number(n)) ? Number(n) : 0;
   const dateOf = (value) => { const d = new Date(value); return Number.isNaN(d.getTime()) ? null : d; };
-  const dateLabel = (value) => { const d = dateOf(value); return d ? new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' }).format(d) : 'نامشخص'; };
+  const jalaliFormatter = new Intl.DateTimeFormat('en-u-ca-persian-nu-latn', {year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'});
+  const faDigits = (s) => String(s ?? '').replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+  const jalaliParts = (d) => { const p = Object.fromEntries(jalaliFormatter.formatToParts(d).map(x=>[x.type,x.value])); return {year:Number(p.year),month:Number(p.month),day:Number(p.day)}; };
+  const jalaliLabel = (d, monthOnly=false) => { if(!d || Number.isNaN(d.getTime())) return 'نامشخص'; const p=jalaliParts(d); return monthOnly ? `${p.year}/${String(p.month).padStart(2,'0')}` : `${p.year}/${String(p.month).padStart(2,'0')}/${String(p.day).padStart(2,'0')}`; };
+  const jalaliInputToDate = (value, end=false) => { if(!value) return null; const m=faDigits(value).trim().match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/); if(!m) throw new Error('تاریخ را به شکل شمسی سال/ماه/روز وارد کن؛ نمونه: ۱۴۰۵/۰۷/۳۰'); const jy=+m[1], jm=+m[2], jd=+m[3]; if(jm<1||jm>12||jd<1||jd>31) throw new Error('تاریخ شمسی واردشده معتبر نیست.'); const start=Date.UTC(jy+621,0,1), stop=Date.UTC(jy+623,0,1); for(let t=start;t<stop;t+=86400000){const d=new Date(t), q=jalaliParts(d); if(q.year===jy&&q.month===jm&&q.day===jd) return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),end?23:0,end?59:0,end?59:0,end?999:0);} throw new Error('این تاریخ شمسی وجود ندارد؛ روز و ماه را بررسی کن.'); };
+  const dateLabel = (value) => { const d = dateOf(value); return d ? jalaliLabel(d) : 'نامشخص'; };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const setStatus = (message, kind = '') => { const el = $('statusMessage'); el.textContent = message; el.className = `status-message ${kind}`.trim(); };
   const parseJSON = (text, name) => { try { return JSON.parse(text); } catch { throw new Error(`فایل «${name}» JSON معتبر نیست.`); } };
@@ -143,8 +148,9 @@
   function invoiceDate(inv){ return dateOf(inv.createdAt); }
   function invoiceSales(inv){ if(Array.isArray(inv.items)) return inv.items.reduce((s,it)=>s+Math.max(0,num(it.quantity))*num(it.salePrice),0); return num(inv.total); }
   function periodInvoices(a){
-    const from=$('dateFrom').value ? new Date($('dateFrom').value+'T00:00:00').getTime() : -Infinity;
-    const to=$('dateTo').value ? new Date($('dateTo').value+'T23:59:59.999').getTime() : Infinity;
+    const from=jalaliInputToDate($('dateFrom').value,false)?.getTime() ?? -Infinity;
+    const to=jalaliInputToDate($('dateTo').value,true)?.getTime() ?? Infinity;
+    if(from>to) throw new Error('تاریخ شروع نباید بعد از تاریخ پایان باشد.');
     return a.validInvoices.filter(i=>{const d=invoiceDate(i);return d&&d.getTime()>=from&&d.getTime()<=to;});
   }
   function listMarkup(items,empty='موردی با داده‌های فعلی پیدا نشد.'){return items.length?items.map((x,i)=>`<div class="tool-row"><span class="tool-rank">${money(i+1)}</span><span class="tool-name">${esc(x.name||x.label||'—')}</span><strong>${esc(x.value||'')}</strong></div>`).join(''):`<p class="empty">${empty}</p>`;}
@@ -153,10 +159,10 @@
     const sumSales=filtered.reduce((s,i)=>s+invoiceSales(i),0), sumProfit=filtered.reduce((s,i)=>s+(Array.isArray(i.items)?i.items.reduce((t,it)=>t+(num(it.salePrice)-num(it.purchasePrice))*Math.max(0,num(it.quantity)),0):0),0);
     const avg=filtered.length?sumSales/filtered.length:0;
     $('periodSummary').innerHTML=[['فروش بازه',money(sumSales)],['سود ناخالص بازه',money(sumProfit)],['تعداد فاکتور',money(filtered.length)],['میانگین فاکتور',money(avg)],['حاشیه سود',sumSales?money(sumProfit/sumSales*100)+'٪':'—'],['تعداد واحد فروخته‌شده',money(filtered.reduce((s,i)=>s+(i.items||[]).reduce((t,it)=>t+Math.max(0,num(it.quantity)),0),0))]].map(([k,v])=>`<article class="tool-kpi"><span>${k}</span><strong>${v}</strong></article>`).join('');
-    const buckets=new Map(); filtered.forEach(i=>{const d=invoiceDate(i);if(!d)return;const key=mode==='month'?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const b=buckets.get(key)||{key,sales:0,profit:0,count:0,units:0};b.sales+=invoiceSales(i);b.count++;(i.items||[]).forEach(it=>{const q=Math.max(0,num(it.quantity));b.units+=q;b.profit+=(num(it.salePrice)-num(it.purchasePrice))*q;});buckets.set(key,b);});
+    const buckets=new Map(); filtered.forEach(i=>{const d=invoiceDate(i);if(!d)return;const key=mode==='month'?jalaliLabel(d,true):jalaliLabel(d);const b=buckets.get(key)||{key,sales:0,profit:0,count:0,units:0};b.sales+=invoiceSales(i);b.count++;(i.items||[]).forEach(it=>{const q=Math.max(0,num(it.quantity));b.units+=q;b.profit+=(num(it.salePrice)-num(it.purchasePrice))*q;});buckets.set(key,b);});
     const rows=[...buckets.values()].sort((x,y)=>x.key.localeCompare(y.key));
     $('periodTable').innerHTML=rows.length?`<table><thead><tr><th>${mode==='month'?'ماه':'روز'}</th><th>فروش</th><th>سود ناخالص</th><th>فاکتور</th><th>تعداد واحد</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.key)}</td><td>${money(r.sales)}</td><td>${money(r.profit)}</td><td>${money(r.count)}</td><td>${money(r.units)}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">در بازهٔ انتخابی فاکتور معتبری وجود ندارد.</p>';
-    const days=new Map(),months=new Map();a.validInvoices.forEach(i=>{const d=invoiceDate(i);if(!d)return;const dk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,mk=dk.slice(0,7);days.set(dk,(days.get(dk)||0)+invoiceSales(i));months.set(mk,(months.get(mk)||0)+invoiceSales(i));});
+    const days=new Map(),months=new Map();a.validInvoices.forEach(i=>{const d=invoiceDate(i);if(!d)return;const dk=jalaliLabel(d),mk=jalaliLabel(d,true);days.set(dk,(days.get(dk)||0)+invoiceSales(i));months.set(mk,(months.get(mk)||0)+invoiceSales(i));});
     $('bestDays').innerHTML=listMarkup([...days].sort((x,y)=>y[1]-x[1]).slice(0,5).map(([name,v])=>({name,value:money(v)})));
     $('bestMonths').innerHTML=listMarkup([...months].sort((x,y)=>y[1]-x[1]).slice(0,5).map(([name,v])=>({name,value:money(v)})));
     $('profitLeaders').innerHTML=listMarkup([...a.products].filter(p=>p._sold>0).sort((x,y)=>y._profit-x._profit).slice(0,5).map(p=>({name:p.name,value:money(p._profit)})));
@@ -167,9 +173,9 @@
     $('kpiTools').innerHTML=listMarkup([{name:'میانگین مبلغ فاکتور',value:money(a.validInvoices.length?a.totalSales/a.validInvoices.length:0)},{name:'میانگین سود فاکتور',value:money(a.validInvoices.length?a.totalProfit/a.validInvoices.length:0)},{name:'حاشیه سود ناخالص',value:(a.totalSales?money(a.totalProfit/a.totalSales*100):'۰')+'٪'},{name:'تعداد فاکتورهای امروز',value:money(a.todayInvoices)},{name:'تعداد واحد فروخته‌شده',value:money(a.totalSoldUnits)}]);
     $('reorderTools').innerHTML=listMarkup(a.products.filter(p=>p._qty<=5).sort((x,y)=>x._qty-y._qty).slice(0,8).map(p=>({name:p.name,value:'بررسی سفارش · موجودی '+money(p._qty)})),'فعلاً کالایی با موجودی ۵ عدد یا کمتر نیست.');
     const current=filtered.reduce((s,i)=>s+invoiceSales(i),0);
-    const span=$('dateFrom').value&&$('dateTo').value?Math.max(1,new Date($('dateTo').value+'T00:00:00')-new Date($('dateFrom').value+'T00:00:00')+86400000):null;
+    const fromDate=jalaliInputToDate($('dateFrom').value,false), toDate=jalaliInputToDate($('dateTo').value,false); const span=fromDate&&toDate?Math.max(1,toDate.getTime()-fromDate.getTime()+86400000):null;
     let previous='برای مقایسهٔ دقیق، تاریخ شروع و پایان را انتخاب کن.';
-    if(span){const currentStart=new Date($('dateFrom').value+'T00:00:00').getTime();const prevStart=currentStart-span;const prevEnd=currentStart-1;const old=a.validInvoices.filter(i=>{const d=invoiceDate(i);return d&&d.getTime()>=prevStart&&d.getTime()<=prevEnd;}).reduce((s,i)=>s+invoiceSales(i),0);const delta=old?((current-old)/old*100):null;previous=`فروش دورهٔ انتخابی: ${money(current)}؛ دورهٔ قبل: ${money(old)}؛ تغییر: ${delta===null?'مبنای مقایسه ندارد':(delta>0?'+':'')+money(delta)+'٪'}.`}
+    if(span){const currentStart=fromDate.getTime();const prevStart=currentStart-span;const prevEnd=currentStart-1;const old=a.validInvoices.filter(i=>{const d=invoiceDate(i);return d&&d.getTime()>=prevStart&&d.getTime()<=prevEnd;}).reduce((s,i)=>s+invoiceSales(i),0);const delta=old?((current-old)/old*100):null;previous=`فروش دورهٔ انتخابی: ${money(current)}؛ دورهٔ قبل: ${money(old)}؛ تغییر: ${delta===null?'مبنای مقایسه ندارد':(delta>0?'+':'')+money(delta)+'٪'}.`}
     $('compareTools').innerHTML=`<p class="tool-note">${esc(previous)}</p>`;
   }
 
@@ -181,6 +187,6 @@
     catch (err) { setStatus(err.message || 'خواندن فایل‌ها ناموفق بود.', 'error'); }
     event.target.value = '';
   });
-  $('applyPeriod').addEventListener('click', () => { if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); });
+  $('applyPeriod').addEventListener('click', () => { try { if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); } catch(e) { setStatus(e.message || 'تاریخ واردشده معتبر نیست.','error'); } });
   $('clearPeriod').addEventListener('click', () => { $('dateFrom').value=''; $('dateTo').value=''; $('periodMode').value='month'; if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); });
 })();
