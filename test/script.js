@@ -174,11 +174,61 @@
     $('kpiTools').innerHTML=listMarkup([{name:'میانگین مبلغ فاکتور',value:money(a.validInvoices.length?a.totalSales/a.validInvoices.length:0)},{name:'میانگین سود فاکتور',value:money(a.validInvoices.length?a.totalProfit/a.validInvoices.length:0)},{name:'حاشیه سود ناخالص',value:(a.totalSales?money(a.totalProfit/a.totalSales*100):'۰')+'٪'},{name:'تعداد فاکتورهای امروز',value:money(a.todayInvoices)},{name:'تعداد واحد فروخته‌شده',value:money(a.totalSoldUnits)}]);
     $('reorderTools').innerHTML=listMarkup(a.products.filter(p=>p._qty<=5).sort((x,y)=>x._qty-y._qty).slice(0,8).map(p=>({name:p.name,value:'بررسی سفارش · موجودی '+money(p._qty)})),'فعلاً کالایی با موجودی ۵ عدد یا کمتر نیست.');
     const current=filtered.reduce((s,i)=>s+invoiceSales(i),0);
-    const fromDate=jalaliInputToDate($('dateFrom').value,false), toDate=jalaliInputToDate($('dateTo').value,false); const span=fromDate&&toDate?Math.max(1,toDate.getTime()-fromDate.getTime()+86400000):null;
+    const fromDate=jalaliInputToDate($('dateFrom').value,false), toDate=jalaliInputToDate($('dateTo').value,true); const span=fromDate&&toDate?Math.max(1,toDate.getTime()-fromDate.getTime()+1):null;
     let previous='برای مقایسهٔ دقیق، تاریخ شروع و پایان را انتخاب کن.';
     if(span){const currentStart=fromDate.getTime();const prevStart=currentStart-span;const prevEnd=currentStart-1;const old=a.validInvoices.filter(i=>{const d=invoiceDate(i);return d&&d.getTime()>=prevStart&&d.getTime()<=prevEnd;}).reduce((s,i)=>s+invoiceSales(i),0);const delta=old?((current-old)/old*100):null;previous=`فروش دورهٔ انتخابی: ${money(current)}؛ دورهٔ قبل: ${money(old)}؛ تغییر: ${delta===null?'مبنای مقایسه ندارد':(delta>0?'+':'')+money(delta)+'٪'}.`}
     $('compareTools').innerHTML=`<p class="tool-note">${esc(previous)}</p>`;
   }
+
+  // Mobile-friendly Persian/Jalali date picker. Uses Intl's Persian calendar, no external library.
+  const calendarState = { target: null, year: 0, month: 0 };
+  const jalaliMonthNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+  const calendarLayer = $('jalaliCalendar');
+  function findJalaliMonthStart(year, month) {
+    const begin = Date.UTC(year + 620, 0, 1), finish = Date.UTC(year + 623, 0, 1);
+    for (let t = begin; t < finish; t += 86400000) {
+      const d = new Date(t), p = jalaliParts(d);
+      if (p.year === year && p.month === month && p.day === 1) return d;
+    }
+    return null;
+  }
+  function calendarRender() {
+    $('calendarTitle').textContent = `${jalaliMonthNames[calendarState.month-1]} ${toFaDigits(calendarState.year)}`;
+    const first = findJalaliMonthStart(calendarState.year, calendarState.month);
+    const host = $('calendarDays'); host.innerHTML = '';
+    if (!first) { host.innerHTML = '<p class="empty">نمایش این ماه ممکن نیست.</p>'; return; }
+    const offset = (first.getUTCDay() + 1) % 7; // Saturday-first week
+    for (let i=0; i<offset; i++) { const blank=document.createElement('span'); blank.className='calendar-blank'; blank.setAttribute('aria-hidden','true'); host.appendChild(blank); }
+    const dates=[]; const begin=first.getTime(); const end=Date.UTC(calendarState.year+623,0,1);
+    for(let t=begin;t<end;t+=86400000){ const d=new Date(t), p=jalaliParts(d); if(p.year===calendarState.year&&p.month===calendarState.month) dates.push(p); else if(dates.length) break; }
+    const chosen = calendarState.target?.value ? jalaliInputToDate(calendarState.target.value,false) : null;
+    const chosenParts = chosen ? jalaliParts(new Date(Date.UTC(chosen.getFullYear(),chosen.getMonth(),chosen.getDate()))) : null;
+    const nowParts = jalaliParts(new Date());
+    dates.forEach(p=>{
+      const b=document.createElement('button'); b.type='button'; b.className='calendar-day'; b.textContent=toFaDigits(p.day);
+      b.setAttribute('aria-label',`${p.year}/${p.month}/${p.day}`);
+      if(p.year===nowParts.year&&p.month===nowParts.month&&p.day===nowParts.day)b.classList.add('is-today');
+      if(chosenParts&&p.year===chosenParts.year&&p.month===chosenParts.month&&p.day===chosenParts.day)b.classList.add('is-selected');
+      b.addEventListener('click',()=>{calendarState.target.value=`${p.year}/${String(p.month).padStart(2,'0')}/${String(p.day).padStart(2,'0')}`;calendarState.target.dispatchEvent(new Event('change',{bubbles:true}));closeCalendar();updatePeriodSafely();});
+      host.appendChild(b);
+    });
+  }
+  function openCalendar(target){
+    calendarState.target=target;
+    let p=null; if(target.value){try{const d=jalaliInputToDate(target.value,false);if(d)p=jalaliParts(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())));}catch{}}
+    if(!p)p=jalaliParts(new Date()); calendarState.year=p.year;calendarState.month=p.month;
+    calendarLayer.hidden=false;calendarLayer.setAttribute('aria-hidden','false');document.body.classList.add('calendar-open');calendarRender();$('calendarClose').focus();
+  }
+  function closeCalendar(){calendarLayer.hidden=true;calendarLayer.setAttribute('aria-hidden','true');document.body.classList.remove('calendar-open');if(calendarState.target)calendarState.target.focus();calendarState.target=null;}
+  function updatePeriodSafely(){if(!(state.products.length||state.invoices.length))return;try{renderManagerTools(getAnalytics());setStatus('گزارش با تاریخ انتخاب‌شده به‌روزرسانی شد.','success');}catch(e){setStatus(e.message||'به‌روزرسانی گزارش ناموفق بود.','error');}}
+  ['dateFrom','dateTo'].forEach(id=>{const input=$(id);input.addEventListener('click',()=>openCalendar(input));input.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openCalendar(input);}});});
+  $('calendarPrev').addEventListener('click',()=>{calendarState.month--;if(calendarState.month<1){calendarState.month=12;calendarState.year--;}calendarRender();});
+  $('calendarNext').addEventListener('click',()=>{calendarState.month++;if(calendarState.month>12){calendarState.month=1;calendarState.year++;}calendarRender();});
+  $('calendarClose').addEventListener('click',closeCalendar);
+  $('calendarToday').addEventListener('click',()=>{const p=jalaliParts(new Date());if(calendarState.target)calendarState.target.value=`${p.year}/${String(p.month).padStart(2,'0')}/${String(p.day).padStart(2,'0')}`;closeCalendar();updatePeriodSafely();});
+  $('calendarClear').addEventListener('click',()=>{if(calendarState.target)calendarState.target.value='';closeCalendar();updatePeriodSafely();});
+  calendarLayer.addEventListener('click',e=>{if(e.target===calendarLayer)closeCalendar();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!calendarLayer.hidden)closeCalendar();});
 
   $('connectBtn').addEventListener('click', connectFolder);
   $('refreshBtn').addEventListener('click', refreshData);
