@@ -65,7 +65,7 @@
   async function loadFolderData() {
     if (!directoryHandle) return false;
     const permission=await directoryHandle.queryPermission({mode:"readwrite"});
-    if(permission!=="granted"){folderReady=false;setConnection("bad","برای دسترسی، اتصال پوشه را بزن");return false;}
+    if(permission!=="granted"){folderReady=false;setConnection("bad","برای دسترسی، دیتابیس را متصل کنید");return false;}
     let products=await readJsonFile("biza-products.json",null);
     let invoices=await readJsonFile("biza-invoices.json",null);
     let movements=await readJsonFile("biza-stock-movements.json",null);
@@ -89,7 +89,7 @@
       persistedSnapshots.products = persistedSnapshots.invoices = persistedSnapshots.movements = persistedSnapshots.settings = null;
       await persistFiles();
     }
-    setConnection("ok","پوشه دیتابیس متصل است");
+    setConnection("ok"," دیتابیس متصل است");
     return true;
   }
   async function persistFiles() {
@@ -111,9 +111,9 @@
   function saveDb() {
     if(!folderReady){setConnection("bad","دیتابیس بارگذاری نشده است");toast("اطلاعات بارگذاری نشده؛ صفحه را دوباره باز کن.");return false;}
     localStorage.setItem(DB_KEY,JSON.stringify(db));
-    if(cacheOnlyMode||!directoryHandle){localStorage.setItem("biza_lite_cache_dirty","yes");setConnection("bad","ذخیره محلی فعال است؛ پوشه فعلاً اجازه دسترسی نداده");toast("تغییرات در حافظه مرورگر ذخیره شد؛ برای همگام‌سازی فایل‌های پوشه، اتصال پوشه را بزن.");return true;}
+    if(cacheOnlyMode||!directoryHandle){localStorage.setItem("biza_lite_cache_dirty","yes");setConnection("bad","ذخیره محلی فعال است؛ دیتابیس فعلاً اجازه دسترسی نداده");toast("تغییرات در حافظه مرورگر ذخیره شد؛ برای همگام‌سازی دیتابیس را متصل کنید");return true;}
     setConnection("ok","در حال ذخیره اطلاعات…");
-    writeQueue=writeQueue.then(()=>persistFiles()).then(()=>{setConnection("ok","پوشه دیتابیس متصل است");}).catch(err=>{cacheOnlyMode=true;localStorage.setItem(DB_KEY,JSON.stringify(db));setConnection("bad","ذخیره محلی؛ دسترسی پوشه موقتاً قطع شد");toast("اجازه پوشه موقتاً قطع شد؛ تغییرات در مرورگر نگه داشته شد.");console.error(err);});
+    writeQueue=writeQueue.then(()=>persistFiles()).then(()=>{setConnection("ok"," دیتابیس متصل است");}).catch(err=>{cacheOnlyMode=true;localStorage.setItem(DB_KEY,JSON.stringify(db));setConnection("bad","ذخیره محلی؛ دسترسی دیتابیس موقتاً قطع شد");toast("اجازه دیتابیس موقتاً قطع شد؛ تغییرات در مرورگر نگه داشته شد.");console.error(err);});
     return true;
   }
   async function connectFolder(pickNew=false) {
@@ -132,12 +132,12 @@
           folderReady=true; cacheOnlyMode=false;
           persistedSnapshots.products = persistedSnapshots.invoices = persistedSnapshots.movements = persistedSnapshots.settings = null;
           await persistFiles();
-          setConnection("ok","پوشه دیتابیس متصل است"); ok=true;
+          setConnection("ok"," دیتابیس متصل است"); ok=true;
         }
       } else ok=await loadFolderData();
-      if(ok){toast("پوشه دیتابیس وصل و همگام شد.");showApp();}
+      if(ok){toast(" دیتابیس وصل و همگام شد.");showApp();}
       return ok;
-    } catch(err){if(err.name!=="AbortError") {console.error(err);toast("اتصال پوشه انجام نشد؛ اجازه دسترسی را بررسی کن.");}return false;}
+    } catch(err){if(err.name!=="AbortError") {console.error(err);toast("اتصال دیتابیس انجام نشد؛ اجازه دسترسی را بررسی کن.");}return false;}
   }
   function showApp() {
     $("appView").classList.remove("hidden");
@@ -293,7 +293,7 @@
     scannerUnlockTimer = null;
     $("scannerResult").textContent = "—";
     $("scannerCounter").textContent = "۰ اسکن";
-    $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن پیوسته برای فروش" : "اسکن بارکد کالا";
+    $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن  برای فروش" : "اسکن بارکد کالا";
     $("scannerHelp").textContent = scannerTarget === "sale"
       ? "هر بارکدِ ثبت‌شده در انبار خودکار به فاکتور اضافه می‌شود؛ برای تغییر تعداد از + و − کنار نام کالا استفاده کن. کالای جدید بالای فهرست می‌آید."
       : "بارکد را مقابل دوربین بگیر. پس از ثبت عدد، می‌توانی نام و مشخصات کالا را خودت وارد کنی.";
