@@ -295,8 +295,8 @@
     $("scannerCounter").textContent = "۰ اسکن";
     $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن  برای فروش" : "اسکن بارکد کالا";
     $("scannerHelp").textContent = scannerTarget === "sale"
-      ? "هر بارکدِ ثبت‌شده در انبار خودکار به فاکتور اضافه می‌شود؛ برای تغییر تعداد از + و − کنار نام کالا استفاده کن. کالای جدید بالای فهرست می‌آید."
-      : "بارکد را مقابل دوربین بگیر. پس از ثبت عدد، می‌توانی نام و مشخصات کالا را خودت وارد کنی.";
+      ? "..."
+      : "بارکد را مقابل دوربین بگیر.";
     $("scannerModal").classList.remove("hidden");
     $("scannerModal").setAttribute("aria-hidden", "false");
     document.body.classList.add("scanner-open");
@@ -591,10 +591,10 @@
         const perm=await directoryHandle.queryPermission({mode:"readwrite"});
         if(perm==="granted" && folderReady && localStorage.getItem("biza_lite_cache_dirty")==="yes"){
           cacheOnlyMode=false; await persistFiles(); localStorage.removeItem("biza_lite_cache_dirty");
-          setConnection("ok","پوشه دیتابیس متصل و اطلاعات همگام شد");
+          setConnection("ok"," دیتابیس متصل و اطلاعات همگام شد");
         } else if(perm==="granted") await loadFolderData();
-        else if(folderReady) setConnection("bad","اطلاعات بازیابی شد؛ برای همگام‌سازی پوشه، دکمه اتصال را بزن");
-        else setConnection("bad","پوشه دیتابیس را یک‌بار وصل کن");
+        else if(folderReady) setConnection("bad","اطلاعات بازیابی شد؛ برای همگام‌سازی ، دکمه اتصال را بزن");
+        else setConnection("bad"," دیتابیس را یک‌بار وصل کن");
       }
     } catch(err){console.warn("Folder handle not available",err);}
     // The app opens directly without a username/password screen; cached data remains available
