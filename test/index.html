@@ -11,7 +11,7 @@
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">M</span><span><strong>Mahshap</strong><small>گزارش‌های فروشگاه</small></span></a>
-      <span class="local-tag"><i></i> گزارش فروش و موجودی</span>
+      <span class="local-tag" id="connectionTag"><i id="connectionIndicator"></i> گزارش فروش و موجودی</span>
     </header>
 
     <main>
@@ -22,6 +22,7 @@
           <p>گزارش فروش، سود و موجودی بر اساس اطلاعات فروشگاه</p>
           <div class="connect-actions">
             <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> اتصال به اطلاعات فروشگاه</button>
+            <button id="changeDbBtn" class="btn btn-secondary" type="button">تغییر دیتابیس</button>
             <button id="refreshBtn" class="btn btn-secondary" type="button" disabled>به‌روزرسانی تحلیل</button>
           </div>
           <p id="statusMessage" class="status-message" role="status">برای شروع، اطلاعات فروشگاه را بارگذاری کن.</p>

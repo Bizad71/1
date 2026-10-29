@@ -18,6 +18,7 @@
   const dateLabel = (value) => { const d = dateOf(value); return d ? jalaliLabel(d) : 'نامشخص'; };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const setStatus = (message, kind = '') => { const el = $('statusMessage'); el.textContent = message; el.className = `status-message ${kind}`.trim(); };
+  function setConnectionIndicator(connected) { const tag = $('connectionTag'); if (tag) tag.classList.toggle('connected', Boolean(connected)); }
   const parseJSON = (text, name) => { try { return JSON.parse(text); } catch { throw new Error(`فایل «${name}» JSON معتبر نیست.`); } };
   function normalizeArray(value, name) { if (!Array.isArray(value)) throw new Error(`ساختار فایل «${name}» معتبر نیست؛ انتظار آرایه می‌رفت.`); return value; }
 
@@ -55,6 +56,7 @@
     if (!state.products.length && !state.invoices.length) setStatus('هنوز کالا یا فاکتوری ثبت نشده است.', 'success');
     else setStatus(`${money(state.products.length)} کالا و ${money(state.invoices.length)} فاکتور بارگذاری شد.`, 'success');
     $('refreshBtn').disabled = !state.directoryHandle;
+    setConnectionIndicator(Boolean(state.directoryHandle));
     renderDashboard();
   }
   const SHARED_HANDLE_DB = 'biza_lite_handles';
@@ -77,6 +79,18 @@
         const request = idb.transaction(SHARED_HANDLE_STORE, 'readonly').objectStore(SHARED_HANDLE_STORE).get('directory');
         request.onsuccess = () => resolve(request.result || null);
         request.onerror = () => reject(request.error);
+      });
+    } finally { idb.close(); }
+  }
+  async function saveSharedDirectoryHandle(handle) {
+    const idb = await openSharedHandleDb();
+    try {
+      await new Promise((resolve, reject) => {
+        const tx = idb.transaction(SHARED_HANDLE_STORE, 'readwrite');
+        tx.objectStore(SHARED_HANDLE_STORE).put(handle, 'directory');
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('ذخیره پوشه انجام نشد.'));
       });
     } finally { idb.close(); }
   }
@@ -111,6 +125,7 @@
           setStatus('در حال خواندن اطلاعات فروشگاه…');
           const data = await readFromDirectoryHandle(handle);
           state.directoryHandle = handle;
+          await saveSharedDirectoryHandle(handle);
           applyData(data);
           return;
         } catch (err) {
@@ -127,6 +142,30 @@
       setStatus(err.message || 'بارگذاری اطلاعات فروشگاه انجام نشد.', 'error');
     }
   }
+  async function changeDatabase() {
+    if (!window.showDirectoryPicker) {
+      setStatus('این مرورگر انتخاب مستقیم پوشه را پشتیبانی نمی‌کند؛ فایل‌های اطلاعات فروشگاه را انتخاب کن.');
+      $('folderInput').click();
+      return;
+    }
+    try {
+      const handle = await window.showDirectoryPicker({ mode: 'read' });
+      if (handle.requestPermission) {
+        const permission = await handle.requestPermission({ mode: 'read' });
+        if (permission !== 'granted') throw new Error('اجازه خواندن پوشه داده نشد.');
+      }
+      setStatus('در حال خواندن اطلاعات فروشگاه…');
+      const data = await readFromDirectoryHandle(handle);
+      await saveSharedDirectoryHandle(handle);
+      state.directoryHandle = handle;
+      applyData(data);
+      setStatus('دیتابیس تغییر کرد.', 'success');
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+      setStatus(err.message || 'تغییر دیتابیس انجام نشد.', 'error');
+    }
+  }
+
   async function refreshData() {
     if (!state.directoryHandle) { setStatus('برای به‌روزرسانی، پوشه اطلاعات فروشگاه را انتخاب کن.'); $('folderInput').click(); return; }
     try { setStatus('در حال به‌روزرسانی…'); const data = await readFromDirectoryHandle(state.directoryHandle); applyData(data); }
@@ -422,6 +461,7 @@
   });
 
   $('connectBtn').addEventListener('click', connectFolder);
+  $('changeDbBtn').addEventListener('click', changeDatabase);
   $('refreshBtn').addEventListener('click', refreshData);
   $('folderInput').addEventListener('change', async (event) => {
     const files = event.target.files; if (!files || !files.length) return;

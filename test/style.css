@@ -455,3 +455,11 @@ body:before,body:after{display:none!important}.topbar{border-bottom-color:#fffff
 
 /* Keep headings simple; the main title already explains each section. */
 .eyebrow{display:none!important}
+
+/* اتصال دیتابیس و دکمه پشتیبان، هماهنگ با صفحه اصلی */
+.local-tag i{background:#e6e6e6;box-shadow:0 0 10px #ffffff55;animation:none}
+.local-tag.connected i{background:#20d879;box-shadow:0 0 0 3px #20d87920,0 0 12px #20d879a6}
+.support-float{position:fixed;z-index:900;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:5px;width:132px;padding:8px;border:1px solid #ff343d70;border-radius:15px;background:linear-gradient(145deg,#1d1d1ff2,#09090af5);box-shadow:0 8px 26px #0009,0 0 18px #ff343d18;text-align:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.support-float-button{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:34px;padding:7px 8px;border:1px solid #ff343d;border-radius:10px;background:linear-gradient(135deg,#ff424a,#bd000b);color:#fff;font-size:12px;font-weight:800;text-decoration:none;box-shadow:0 4px 13px #ff343d28}
+.support-float-button:hover,.support-float-button:focus-visible{background:linear-gradient(135deg,#ff6269,#d5000d);outline:2px solid #ff8c91;outline-offset:2px}
+@media(max-width:600px){.support-float{left:max(8px,env(safe-area-inset-left));bottom:max(8px,env(safe-area-inset-bottom));width:122px;padding:7px;border-radius:13px}.support-float-button{min-height:32px;font-size:11px}}
