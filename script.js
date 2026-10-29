@@ -247,10 +247,7 @@
   let scannerUnlockTimer = null;
   let scannerScriptPromise = null;
   let scannerSaleOrder = [];
-  let scannerCameraTrack = null;
-  let scannerZoomTimer = null;
   let scannerLastDecodeAt = 0;
-  let scannerCurrentZoom = 1;
   let scannerNativeDetector = null;
   let scannerNativeFrame = 0;
   let scannerNativeBusy = false;
@@ -334,18 +331,7 @@
       }
     } catch (_) { return; }
 
-    // Gently zoom in only when the camera exposes a zoom control and no barcode is being read.
-    if (caps.zoom && Number(caps.zoom.max) > Number(caps.zoom.min || 1) && typeof track.applyConstraints === "function") {
-      if (scannerZoomTimer) clearInterval(scannerZoomTimer);
-      scannerZoomTimer = setInterval(async () => {
-        if (!scannerActive || !scannerCameraTrack || Date.now() - scannerLastDecodeAt < 1700) return;
-        const minZoom = Number(caps.zoom.min || 1);
-        const maxZoom = Math.min(Number(caps.zoom.max), Math.max(minZoom, 3));
-        if (scannerCurrentZoom >= maxZoom) return;
-        scannerCurrentZoom = Math.min(maxZoom, scannerCurrentZoom + 0.5);
-        try { await scannerCameraTrack.applyConstraints({ advanced: [{ zoom: scannerCurrentZoom }] }); } catch (_) {}
-      }, 900);
-    }
+
   }
 
   function scanNativeBarcodeFrame() {
@@ -401,11 +387,10 @@
       throw err;
     }
     scannerNativeDetector = detector;
-    scannerCameraTrack = stream.getVideoTracks ? stream.getVideoTracks()[0] : null;
+    const cameraTrack = stream.getVideoTracks ? stream.getVideoTracks()[0] : null;
     scannerActive = true;
     scannerLastDecodeAt = Date.now();
-    scannerCurrentZoom = 1;
-    await enhanceScannerCamera(scannerCameraTrack);
+    await enhanceScannerCamera(cameraTrack);
     scanNativeBarcodeFrame();
   }
 
@@ -462,7 +447,6 @@
       }
       scannerActive = true;
       scannerLastDecodeAt = Date.now();
-      scannerCurrentZoom = 1;
       const constraints = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: scannerFacing };
       scannerControls = await scannerReader.decodeFromConstraints(
         { video: { ...constraints, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 60 }, focusMode: "continuous" }, audio: false },
@@ -482,8 +466,8 @@
         }
       );
       const video = $("scannerVideo");
-      scannerCameraTrack = video && video.srcObject && video.srcObject.getVideoTracks ? video.srcObject.getVideoTracks()[0] : null;
-      await enhanceScannerCamera(scannerCameraTrack);
+      const cameraTrack = video && video.srcObject && video.srcObject.getVideoTracks ? video.srcObject.getVideoTracks()[0] : null;
+      await enhanceScannerCamera(cameraTrack);
       setScannerLoading(false);
       scannerStatus("دوربین روشن است؛ بارکد را داخل کادر بگیر.");
     } catch (err) {
@@ -503,11 +487,6 @@
     const now = Date.now();
     scannerLastDecodeAt = now;
     scannerLastSeenAt = now;
-    // Return to a wider view after a successful read so the next barcode is easy to present.
-    if (scannerCameraTrack && scannerCurrentZoom > 1) {
-      scannerCurrentZoom = 1;
-      try { scannerCameraTrack.applyConstraints({ advanced: [{ zoom: 1 }] }).catch(() => {}); } catch (_) {}
-    }
     // Lock the currently visible code to avoid processing the same frame repeatedly.
     if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
     scannerUnlockTimer = setTimeout(() => { scannerLastValue = ""; scannerUnlockTimer = null; }, 750);
@@ -600,10 +579,6 @@
     scannerLastValue = "";
     try { if (scannerControls && typeof scannerControls.stop === "function") scannerControls.stop(); } catch {}
     scannerControls = null;
-    if (scannerZoomTimer) clearInterval(scannerZoomTimer);
-    scannerZoomTimer = null;
-    scannerCameraTrack = null;
-    scannerCurrentZoom = 1;
     try { if (scannerReader && typeof scannerReader.reset === "function") scannerReader.reset(); } catch {}
     scannerReader = null;
     const video = $("scannerVideo");
@@ -735,8 +710,8 @@
           cacheOnlyMode=false; await persistFiles(); localStorage.removeItem("biza_lite_cache_dirty");
           setConnection("ok"," دیتابیس متصل و اطلاعات همگام شد");
         } else if(perm==="granted") await loadFolderData();
-        else if(folderReady) setConnection("bad","اطلاعات بازیابی شد؛ برای همگام‌سازی ، دکمه اتصال را بزن");
-        else setConnection("bad"," دیتابیس را یک‌بار وصل کن");
+        else if(folderReady) setConnection("ok","اطلاعات فروشگاه آماده است");
+        else setConnection("bad","اطلاعات فروشگاه آماده نیست");
       }
     } catch(err){console.warn("Folder handle not available",err);}
     // The app opens directly without a username/password screen; cached data remains available
