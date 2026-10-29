@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#05070d">
-  <title>Mahshop | Store Analytics</title>
+  <meta name="theme-color" content="#080808">
+  <title>Mahshap | Store Analytics</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">M</span><span><strong>Mahshop</strong><small>مرکز فرماندهی تحلیل</small></span></a>
+      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">M</span><span><strong>Mahshap</strong><small>مرکز فرماندهی تحلیل</small></span></a>
       <span class="local-tag"><i></i> تحلیل محلی اطلاعات</span>
     </header>
 
@@ -19,15 +19,22 @@
         <div class="hero-copy">
           <span class="eyebrow">SMART STORE ANALYTICS</span>
           <h1>تصمیم‌های بهتر برای فروشگاهت</h1>
-          <p>چهار فایل JSON دیتابیس را با انتخاب‌گر گوشی انتخاب کن تا فروش، سود، موجودی و کالاهای نیازمند توجه بررسی شوند. فایل‌های اصلی فقط خوانده می‌شوند و تغییری نمی‌کنند.</p>
+          <p>دیتابیس فروشگاه را متصل کن تا گزارش فروش، سود، موجودی و پیشنهادهای مدیریتی از اطلاعات همان پوشه ساخته شود. فایل‌های اصلی فقط خوانده می‌شوند و تغییری نمی‌کنند.</p>
           <div class="connect-actions">
-            <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> انتخاب فایل‌های دیتابیس</button>
+            <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> اتصال به دیتابیس فروشگاه</button>
             <button id="refreshBtn" class="btn btn-secondary" type="button" disabled>به‌روزرسانی تحلیل</button>
           </div>
-          <p id="statusMessage" class="status-message" role="status">برای شروع، چهار فایل JSON دیتابیس را انتخاب کن.</p>
+          <p id="statusMessage" class="status-message" role="status">برای شروع، دیتابیس فروشگاه را از طریق دکمه اتصال برقرار کن.</p>
         </div>
-        <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="core"><span>AI</span></div><i class="node node-one"></i><i class="node node-two"></i><i class="node node-three"></i></div>
+        <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="core"><span>M</span></div><i class="node node-one"></i><i class="node node-two"></i><i class="node node-three"></i></div>
         <input id="folderInput" type="file" accept=".json,application/json" multiple hidden>
+      </section>
+
+      <section id="analysisLockedState" class="analysis-locked" hidden aria-live="polite">
+        <div class="welcome-icon">۳۰</div>
+        <h2>برای فعال شدن تحلیل هوشمند، ۳۰ روز سابقهٔ فروش لازم است</h2>
+        <p id="analysisLockedText">دیتابیس فروشگاه متصل است. پس از ثبت و تکمیل حداقل ۳۰ روز سابقهٔ فروش، گزارش‌ها و پیشنهادها نمایش داده می‌شوند.</p>
+        <div class="file-pills"><span id="lockedProductCount">کالاها: —</span><span id="lockedInvoiceCount">فاکتورها: —</span><span>تحلیل فقط خواندنی</span></div>
       </section>
 
       <section id="dashboard" class="dashboard" hidden>
@@ -44,7 +51,9 @@
           <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">SALES PERFORMANCE</span><h3>فروش کالاها</h3></div></div><div id="topProducts" class="product-rankings"><p class="empty">هنوز اطلاعاتی بارگذاری نشده است.</p></div></section>
         </div>
 
-        <section class="panel content-panel trend-panel" style="margin-bottom:18px"><div class="panel-heading"><div><span class="eyebrow">SALES TREND</span><h3>روند فروش در هفته‌های اخیر</h3></div><span class="heading-icon">↗</span></div><div id="trendPanel"><p class="empty">پس از اتصال داده‌ها، روند فروش نمایش داده می‌شود.</p></div></section>
+        <section class="panel content-panel trend-panel" style="margin-bottom:18px"><div class="panel-heading"><div><span class="eyebrow">SALES TREND</span><h3>روند فروش سالانه و ماهانه</h3></div><span class="heading-icon">↗</span></div><div class="trend-controls"><label for="trendView">نوع نمودار<select id="trendView"><option value="year">سالانه؛ مقایسه ماه‌ها</option><option value="month">ماهانه؛ فروش روزانه</option></select></label><label for="trendYear">سال شمسی<select id="trendYear"></select></label><label id="trendMonthField" for="trendMonth" hidden>ماه شمسی<select id="trendMonth"></select></label></div><div id="trendPanel"><p class="empty">پس از اتصال داده‌ها و تکمیل ۳۰ روز سابقه، نمودار فروش نمایش داده می‌شود.</p></div></section>
+
+        <section class="panel content-panel weekday-panel" style="margin-bottom:18px"><div class="panel-heading"><div><span class="eyebrow">WEEKDAY PERFORMANCE</span><h3>کدام روز هفته فروش بیشتری دارد؟</h3></div><span class="heading-icon">۷</span></div><div id="weekdayPanel"><p class="empty">پس از فعال‌شدن تحلیل، فروش روزهای هفته مقایسه می‌شود.</p></div></section>
 
         <section class="panel table-panel"><div class="panel-heading"><div><span class="eyebrow">INVENTORY WATCH</span><h3>وضعیت کالاها</h3></div><span id="inventoryCount" class="count-chip">۰ کالا</span></div><div class="table-wrap"><table><thead><tr><th>نام کالا</th><th>موجودی</th><th>فروش ثبت‌شده</th><th>سود واحد</th><th>وضعیت</th></tr></thead><tbody id="inventoryRows"><tr><td colspan="5" class="empty">ابتدا پوشهٔ دیتابیس را متصل کن.</td></tr></tbody></table></div></section>
 
@@ -68,8 +77,8 @@
         </section>
       </section>
 
-      <section id="welcomeState" class="welcome-state"><div class="welcome-icon">▤</div><h2>اطلاعات فروشگاهت را بررسی کن</h2><p>برای شروع، چهار فایل JSON دیتابیس را انتخاب کن. این صفحه فایل‌های کالاها، فاکتورها و گردش انبار را می‌خواند و گزارش را در همین مرورگر می‌سازد.</p><div class="file-pills"><span>biza-products.json</span><span>biza-invoices.json</span><span>biza-stock-movements.json</span><span>biza-settings.json</span></div></section>
-      <footer><span>Mahshop · Store Management</span><span>اطلاعات فقط خوانده می‌شوند و به سرور ارسال نمی‌شوند.</span></footer>
+      <section id="welcomeState" class="welcome-state"><div class="welcome-icon">▤</div><h2>اطلاعات فروشگاهت را بررسی کن</h2><p>برای شروع، دیتابیس فروشگاه را از طریق دکمه اتصال برقرار کن. اطلاعات فقط از پوشهٔ دیتابیس فروشگاه خوانده می‌شود و گزارش‌ها در همین مرورگر ساخته می‌شوند.</p><div class="file-pills"><span>اطلاعات کالاها</span><span>فاکتورهای فروش</span><span>گردش انبار</span><span>تنظیمات فروشگاه</span></div></section>
+      <footer><span>Mahshap · Store Management</span><span>اطلاعات فقط خوانده می‌شوند و به سرور ارسال نمی‌شوند.</span></footer>
     </main>
   </div>
     <div class="support-float" aria-label="تماس با پشتیبان">
