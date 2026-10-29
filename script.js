@@ -12,7 +12,7 @@
   // Snapshot each folder file so a sale updates only the files whose contents actually changed.
   const persistedSnapshots = { products: null, invoices: null, movements: null, settings: null };
   let db = { products: [], invoices: [], movements: [], settings: { vipLocal: false } };
-  // Keep the in-progress invoice across the round-trip to Binary Eye, which may reload this page.
+  // Keep the in-progress invoice across a page reload or return to the app.
   let cart = (() => {
     try {
       const saved = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -176,7 +176,7 @@
   }
   function invoiceMarkup(invoice) {
     const rows=(invoice.items||[]).map((item,index)=>`<tr><td>${index+1}</td><td>${escapeHtml(item.name||"کالا")}</td><td>${escapeHtml(item.barcode||"—")}</td><td>${num(item.quantity).toLocaleString("fa-IR")}</td><td>${money(item.salePrice)} تومان</td><td>${money(num(item.quantity)*num(item.salePrice))} تومان</td></tr>`).join("");
-    return `<div class="invoice-paper"><div class="invoice-head"><div><h2>Mahshop</h2><p>فاکتور فروش</p></div><div><b>${escapeHtml(invoice.number||"—")}</b><p>${escapeHtml(dateFa(invoice.createdAt))}</p></div></div><table class="invoice-lines"><thead><tr><th>ردیف</th><th>شرح کالا</th><th>بارکد</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>${rows}</tbody></table><div class="invoice-grand-total">مبلغ کل: <strong>${money(invoice.total)} تومان</strong></div><p class="invoice-thanks">با تشکر از خرید شما</p></div>`;
+    return `<div class="invoice-paper"><div class="invoice-head"><div><h2>Mahshap</h2><p>فاکتور فروش</p></div><div><b>${escapeHtml(invoice.number||"—")}</b><p>${escapeHtml(dateFa(invoice.createdAt))}</p></div></div><table class="invoice-lines"><thead><tr><th>ردیف</th><th>شرح کالا</th><th>بارکد</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead><tbody>${rows}</tbody></table><div class="invoice-grand-total">مبلغ کل: <strong>${money(invoice.total)} تومان</strong></div><p class="invoice-thanks">با تشکر از خرید شما</p></div>`;
   }
   function viewInvoice(id) {
     const invoice=db.invoices.find(i=>i.id===id); if(!invoice) return;
@@ -251,6 +251,9 @@
   let scannerZoomTimer = null;
   let scannerLastDecodeAt = 0;
   let scannerCurrentZoom = 1;
+  let scannerNativeDetector = null;
+  let scannerNativeFrame = 0;
+  let scannerNativeBusy = false;
 
   function loadScannerLibrary() {
     if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) return Promise.resolve();
@@ -297,15 +300,115 @@
     scannerUnlockTimer = null;
     $("scannerResult").textContent = "—";
     $("scannerCounter").textContent = "۰ اسکن";
-    $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن  برای فروش" : "اسکن بارکد کالا";
+    $("scannerTitle").textContent = scannerTarget === "sale" ? "اسکن کالا برای فروش" : "اسکن کالای موجود";
     $("scannerHelp").textContent = scannerTarget === "sale"
-      ? "..."
-      : "بارکد را مقابل دوربین بگیر.";
+      ? "فقط بارکد کالاهای ثبت‌شده به فاکتور اضافه می‌شوند."
+      : "فقط بارکد کالاهای ثبت‌شده شناسایی می‌شوند.";
     $("scannerModal").classList.remove("hidden");
     $("scannerModal").setAttribute("aria-hidden", "false");
     document.body.classList.add("scanner-open");
     startScanner();
   }
+  async function createNativeBarcodeDetector() {
+    const Detector = window.BarcodeDetector;
+    if (typeof Detector !== "function" || typeof Detector.getSupportedFormats !== "function") return null;
+    let supported = [];
+    try { supported = await Detector.getSupportedFormats(); } catch { return null; }
+    const retailFormats = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "codabar", "qr_code", "data_matrix", "pdf417", "aztec"];
+    const formats = supported.filter(format => retailFormats.includes(format));
+    if (!formats.length) return null;
+    try { return new Detector({ formats }); } catch { return null; }
+  }
+
+  async function enhanceScannerCamera(track) {
+    if (!track || typeof track.getCapabilities !== "function") return;
+    let caps = {};
+    try {
+      caps = track.getCapabilities() || {};
+      const advanced = {};
+      if (Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) advanced.focusMode = "continuous";
+      if (Array.isArray(caps.exposureMode) && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
+      if (Array.isArray(caps.whiteBalanceMode) && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
+      if (Object.keys(advanced).length && typeof track.applyConstraints === "function") {
+        try { await track.applyConstraints({ advanced: [advanced] }); } catch (_) {}
+      }
+    } catch (_) { return; }
+
+    // Gently zoom in only when the camera exposes a zoom control and no barcode is being read.
+    if (caps.zoom && Number(caps.zoom.max) > Number(caps.zoom.min || 1) && typeof track.applyConstraints === "function") {
+      if (scannerZoomTimer) clearInterval(scannerZoomTimer);
+      scannerZoomTimer = setInterval(async () => {
+        if (!scannerActive || !scannerCameraTrack || Date.now() - scannerLastDecodeAt < 1700) return;
+        const minZoom = Number(caps.zoom.min || 1);
+        const maxZoom = Math.min(Number(caps.zoom.max), Math.max(minZoom, 3));
+        if (scannerCurrentZoom >= maxZoom) return;
+        scannerCurrentZoom = Math.min(maxZoom, scannerCurrentZoom + 0.5);
+        try { await scannerCameraTrack.applyConstraints({ advanced: [{ zoom: scannerCurrentZoom }] }); } catch (_) {}
+      }, 900);
+    }
+  }
+
+  function scanNativeBarcodeFrame() {
+    if (!scannerActive || !scannerNativeDetector) return;
+    const video = $("scannerVideo");
+    if (!video || video.readyState < 2 || scannerNativeBusy) {
+      scannerNativeFrame = requestAnimationFrame(scanNativeBarcodeFrame);
+      return;
+    }
+    scannerNativeBusy = true;
+    Promise.resolve(scannerNativeDetector.detect(video)).then(results => {
+      if (!scannerActive) return;
+      const detected = Array.isArray(results) ? results.find(item => item && item.rawValue) : null;
+      if (detected) {
+        handleScannedBarcode(detected.rawValue);
+      } else if (scannerLastValue && Date.now() - scannerLastSeenAt > 900) {
+        scannerLastValue = "";
+        scannerLastAcceptedAt = 0;
+      }
+    }).catch(() => {
+      // A frame that cannot be decoded is normal; keep scanning the next frame.
+    }).finally(() => {
+      scannerNativeBusy = false;
+      if (scannerActive && scannerNativeDetector) scannerNativeFrame = requestAnimationFrame(scanNativeBarcodeFrame);
+    });
+  }
+
+  async function startNativeScanner(detector) {
+    let stream;
+    const video = $("scannerVideo");
+    const preferred = {
+      facingMode: { ideal: scannerFacing },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      frameRate: { ideal: 30, max: 60 }
+    };
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: preferred, audio: false });
+    } catch (err) {
+      // Retry softer camera constraints for devices that cannot provide the preferred resolution.
+      if (["OverconstrainedError", "ConstraintNotSatisfiedError"].includes(err && err.name)) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: scannerFacing } }, audio: false });
+      } else {
+        throw err;
+      }
+    }
+    try {
+      video.srcObject = stream;
+      await video.play();
+    } catch (err) {
+      try { stream.getTracks().forEach(track => track.stop()); } catch (_) {}
+      video.srcObject = null;
+      throw err;
+    }
+    scannerNativeDetector = detector;
+    scannerCameraTrack = stream.getVideoTracks ? stream.getVideoTracks()[0] : null;
+    scannerActive = true;
+    scannerLastDecodeAt = Date.now();
+    scannerCurrentZoom = 1;
+    await enhanceScannerCamera(scannerCameraTrack);
+    scanNativeBarcodeFrame();
+  }
+
   async function startScanner() {
     if (scannerActive) await stopScanner(false);
     if (!window.isSecureContext && location.hostname !== "localhost" && location.protocol !== "file:") {
@@ -321,6 +424,21 @@
     setScannerLoading(true, "در حال بارگذاری موتور اسکن…");
     scannerStatus("در حال آماده‌سازی اسکنر…");
     try {
+      const nativeDetector = await createNativeBarcodeDetector();
+      if (nativeDetector) {
+        try {
+          await startNativeScanner(nativeDetector);
+          setScannerLoading(false);
+          scannerStatus("دوربین روشن است؛ بارکد را داخل کادر بگیر.");
+          return;
+        } catch (nativeError) {
+          await stopScanner(false);
+          // Permission or camera hardware errors will also block ZXing; report them directly.
+          if (nativeError && ["NotAllowedError", "SecurityError", "NotFoundError", "DevicesNotFoundError"].includes(nativeError.name)) throw nativeError;
+          // Some browsers expose BarcodeDetector but cannot use it with the selected camera.
+          // Continue through the ZXing fallback instead of leaving the scanner unusable.
+        }
+      }
       await loadScannerLibrary();
       const Reader = window.ZXingBrowser.BrowserMultiFormatReader;
       // Ask ZXing to spend more effort on small/low-contrast barcodes and limit work to common retail formats.
@@ -365,41 +483,18 @@
       );
       const video = $("scannerVideo");
       scannerCameraTrack = video && video.srcObject && video.srcObject.getVideoTracks ? video.srcObject.getVideoTracks()[0] : null;
-      // Enable continuous focus/exposure where the phone camera supports them.
-      if (scannerCameraTrack && scannerCameraTrack.getCapabilities) {
-        try {
-          const caps = scannerCameraTrack.getCapabilities();
-          const advanced = {};
-          if (caps.focusMode && caps.focusMode.includes("continuous")) advanced.focusMode = "continuous";
-          if (caps.exposureMode && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
-          if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
-          if (Object.keys(advanced).length) await scannerCameraTrack.applyConstraints({ advanced: [advanced] });
-        } catch (_) {}
-        // If a small barcode is not detected, gently zoom in when optical/digital camera zoom exists.
-        const caps = scannerCameraTrack.getCapabilities ? scannerCameraTrack.getCapabilities() : {};
-        if (caps.zoom && Number(caps.zoom.max) > Number(caps.zoom.min || 1)) {
-          if (scannerZoomTimer) clearInterval(scannerZoomTimer);
-          scannerZoomTimer = setInterval(async () => {
-            if (!scannerActive || !scannerCameraTrack || Date.now() - scannerLastDecodeAt < 1700) return;
-            const minZoom = Number(caps.zoom.min || 1);
-            const maxZoom = Math.min(Number(caps.zoom.max), Math.max(minZoom, 3));
-            if (scannerCurrentZoom >= maxZoom) return;
-            scannerCurrentZoom = Math.min(maxZoom, scannerCurrentZoom + 0.5);
-            try { await scannerCameraTrack.applyConstraints({ advanced: [{ zoom: scannerCurrentZoom }] }); } catch (_) {}
-          }, 900);
-        }
-      }
+      await enhanceScannerCamera(scannerCameraTrack);
       setScannerLoading(false);
       scannerStatus("دوربین روشن است؛ بارکد را داخل کادر بگیر.");
     } catch (err) {
-      scannerActive = false;
+      await stopScanner(false);
       setScannerLoading(true, /NotAllowedError|Permission/i.test(String(err))
         ? "اجازه دوربین داده نشد. مجوز دوربین سایت را در مرورگر فعال کن."
         : /NotFoundError|DevicesNotFound/i.test(String(err))
           ? "دوربین پیدا نشد."
           : "اسکنر اجرا نشد؛ اتصال اینترنت و مجوز دوربین را بررسی کن.");
       scannerStatus(/NotAllowedError|Permission/i.test(String(err)) ? "دسترسی دوربین مسدود است." : "شروع اسکن ناموفق بود.");
-      console.error("Mahshop scanner start failed", err);
+      console.error("Mahshap scanner start failed", err);
     }
   }
   function handleScannedBarcode(rawValue) {
@@ -413,33 +508,33 @@
       scannerCurrentZoom = 1;
       try { scannerCameraTrack.applyConstraints({ advanced: [{ zoom: 1 }] }).catch(() => {}); } catch (_) {}
     }
-    // A barcode stays locked while it remains in view, preventing repeated additions.
+    // Lock the currently visible code to avoid processing the same frame repeatedly.
     if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
     scannerUnlockTimer = setTimeout(() => { scannerLastValue = ""; scannerUnlockTimer = null; }, 750);
     if (value === scannerLastValue) return;
     scannerLastValue = value;
     scannerLastAcceptedAt = now;
+
+    // The scanner is a lookup device only: unknown codes are silently ignored in every mode.
+    const normalized = normalizeBarcode(value);
+    const matches = db.products.filter(p => normalizeBarcode(p.barcode) === normalized);
+    // If old/corrupt data contains duplicate barcodes, do not guess which product is correct.
+    if (matches.length !== 1) return;
+    const product = matches[0];
+
     scannerCount += 1;
     $("scannerResult").textContent = value;
     $("scannerCounter").textContent = scannerCount.toLocaleString("fa-IR") + " اسکن";
+
     if (scannerTarget === "inventory") {
-      $("barcode").value = value;
-      $("barcode").dispatchEvent(new Event("input", { bubbles: true }));
-      stopScanner(false).then(() => closeScanner(false));
-      toast("بارکد خوانده شد؛ مشخصات کالا را وارد کن.");
-      $("barcode").focus({ preventScroll: true });
+      // A known code may open an existing product for editing; the scanner never creates a product.
+      closeScanner(false).then(() => {
+        goPage("inventory");
+        editProduct(product.id);
+      });
       return;
     }
 
-    // Sales mode: only products already registered in inventory can enter the invoice.
-    const normalized = normalizeBarcode(value);
-    const product = db.products.find(p => normalizeBarcode(p.barcode) === normalized);
-    if (!product) {
-      scannerStatus("این بارکد در انبار ثبت نشده است؛ به فاکتور اضافه نشد.");
-      toast("این بارکد در انبار ثبت نشده است.");
-      if ("vibrate" in navigator) { try { navigator.vibrate([35, 45, 35]); } catch {} }
-      return;
-    }
     if (num(product.quantity) < 1) {
       scannerStatus("موجودی این کالا صفر است؛ به فاکتور اضافه نشد.");
       toast("موجودی این کالا تمام شده است.");
@@ -496,6 +591,10 @@
   });
   async function stopScanner(hideLoading = true) {
     scannerActive = false;
+    if (scannerNativeFrame) cancelAnimationFrame(scannerNativeFrame);
+    scannerNativeFrame = 0;
+    scannerNativeDetector = null;
+    scannerNativeBusy = false;
     if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
     scannerUnlockTimer = null;
     scannerLastValue = "";
@@ -527,8 +626,8 @@
   }
 
   function exportBackup() {
-    const blob=new Blob([JSON.stringify({format:"BIZAAP-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`mahshop-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(url);
+    const blob=new Blob([JSON.stringify({format:"MAHSHAP-LITE-BACKUP",version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`mahshap-backup-${todayKey()}.json`; a.click(); URL.revokeObjectURL(url);
     toast("درخواست خروجی بکاپ انجام شد.");
   }
 
@@ -577,7 +676,7 @@
   });
   $("addToCartForm").addEventListener("submit",e=>{
     e.preventDefault(); const q=$("saleLookup").value.trim().toLowerCase();
-    const product=db.products.find(p=>String(p.barcode||"").toLowerCase()===q)||db.products.find(p=>p.name.toLowerCase()===q);
+    const product=db.products.find(p=>normalizeBarcode(p.barcode)===normalizeBarcode(q))||db.products.find(p=>p.name.toLowerCase()===q);
     if(!product){toast("کالا پیدا نشد؛ نام یا بارکد را دقیق وارد کن.");showMatches(q);return;}
     if(addToCart(product,$("saleQty").value)){ $("saleLookup").value=""; $("saleQty").value=1; $("saleMatches").classList.add("hidden"); }
   });
@@ -610,7 +709,7 @@
     for(const item of cart){const p=db.products.find(x=>x.id===item.productId);if(!p||num(p.quantity)<item.quantity){toast(`موجودی ${item.name} کافی نیست.`);return;}}
     const items=cart.map(x=>({...x}));
     items.forEach(item=>{const p=db.products.find(x=>x.id===item.productId);p.quantity-=item.quantity;db.movements.push({id:"m_"+Date.now()+"_"+Math.random().toString(36).slice(2,5),productId:p.id,type:"sale",delta:-item.quantity,at:Date.now(),note:"فروش"});});
-    const invoice={id:"i_"+Date.now(),number:"MAHSHOP-"+String(db.invoices.length+1).padStart(5,"0"),createdAt:Date.now(),items,total:items.reduce((s,x)=>s+x.quantity*x.salePrice,0)};
+    const invoice={id:"i_"+Date.now(),number:"MAHSHAP-"+String(db.invoices.length+1).padStart(5,"0"),createdAt:Date.now(),items,total:items.reduce((s,x)=>s+x.quantity*x.salePrice,0)};
     db.invoices.push(invoice);
     if(saveDb()){cart=[];scannerSaleOrder=[];renderAll();goPage("sales");toast(`فاکتور ${invoice.number} ثبت شد.`);}
   });
