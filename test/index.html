@@ -10,21 +10,21 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">M</span><span><strong>Mahshap</strong><small>مرکز فرماندهی تحلیل</small></span></a>
-      <span class="local-tag"><i></i> تحلیل محلی اطلاعات</span>
+      <a class="brand" href="../" aria-label="بازگشت به سایت فروشگاه"><span class="brand-mark">M</span><span><strong>Mahshap</strong><small>گزارش‌های فروشگاه</small></span></a>
+      <span class="local-tag"><i></i> گزارش فروش و موجودی</span>
     </header>
 
     <main>
       <section class="hero panel">
         <div class="hero-copy">
-          <span class="eyebrow">SMART STORE ANALYTICS</span>
+          <span class="eyebrow">گزارش فروشگاه</span>
           <h1>تصمیم‌های بهتر برای فروشگاهت</h1>
-          <p>دیتابیس فروشگاه را متصل کن تا گزارش فروش، سود، موجودی و پیشنهادهای مدیریتی از اطلاعات همان پوشه ساخته شود. فایل‌های اصلی فقط خوانده می‌شوند و تغییری نمی‌کنند.</p>
+          <p>گزارش فروش، سود و موجودی بر اساس اطلاعات فروشگاه</p>
           <div class="connect-actions">
-            <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> اتصال به دیتابیس فروشگاه</button>
+            <button id="connectBtn" class="btn btn-primary" type="button"><span>＋</span> اتصال به اطلاعات فروشگاه</button>
             <button id="refreshBtn" class="btn btn-secondary" type="button" disabled>به‌روزرسانی تحلیل</button>
           </div>
-          <p id="statusMessage" class="status-message" role="status">برای شروع، دیتابیس فروشگاه را از طریق دکمه اتصال برقرار کن.</p>
+          <p id="statusMessage" class="status-message" role="status">برای شروع، اطلاعات فروشگاه را بارگذاری کن.</p>
         </div>
         <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="core"><span>M</span></div><i class="node node-one"></i><i class="node node-two"></i><i class="node node-three"></i></div>
         <input id="folderInput" type="file" accept=".json,application/json" multiple hidden>
@@ -32,13 +32,13 @@
 
       <section id="analysisLockedState" class="analysis-locked" hidden aria-live="polite">
         <div class="welcome-icon">۳۰</div>
-        <h2>برای فعال شدن تحلیل هوشمند، ۳۰ روز سابقهٔ فروش لازم است</h2>
-        <p id="analysisLockedText">دیتابیس فروشگاه متصل است. پس از ثبت و تکمیل حداقل ۳۰ روز سابقهٔ فروش، گزارش‌ها و پیشنهادها نمایش داده می‌شوند.</p>
-        <div class="file-pills"><span id="lockedProductCount">کالاها: —</span><span id="lockedInvoiceCount">فاکتورها: —</span><span>تحلیل فقط خواندنی</span></div>
+        <h2>برای نمایش گزارش‌ها، حداقل ۳۰ روز سابقه فروش لازم است</h2>
+        <p id="analysisLockedText">با ثبت فروش در دست‌کم ۳۰ روز، گزارش‌ها و پیشنهادها نمایش داده می‌شوند.</p>
+        <div class="file-pills"><span id="lockedProductCount">کالاها: —</span><span id="lockedInvoiceCount">فاکتورها: —</span></div>
       </section>
 
       <section id="dashboard" class="dashboard" hidden>
-        <div class="section-heading"><div><span class="eyebrow">STORE OVERVIEW</span><h2>خلاصهٔ فروشگاه</h2></div><span id="dataDate" class="muted"></span></div>
+        <div class="section-heading"><div><span class="eyebrow">خلاصه</span><h2>خلاصهٔ فروشگاه</h2></div><span id="dataDate" class="muted"></span></div>
         <div class="stats-grid">
           <article class="stat-card"><span class="stat-icon blue">↗</span><span class="stat-label">مجموع فروش ثبت‌شده</span><strong id="totalSales">—</strong><small id="invoiceCount">—</small></article>
           <article class="stat-card"><span class="stat-icon green">٪</span><span class="stat-label">سود ناخالص محاسبه‌شده</span><strong id="totalProfit">—</strong><small id="profitMargin">بر اساس قیمت خرید ثبت‌شده در فاکتور</small></article>
@@ -47,38 +47,38 @@
         </div>
 
         <div class="content-grid">
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">RECOMMENDATIONS</span><h3>پیشنهادهای هوشمند</h3></div><span class="heading-icon">✦</span></div><div id="recommendations" class="recommendations"><p class="empty">برای دیدن پیشنهادها پوشه را وصل کن.</p></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">SALES PERFORMANCE</span><h3>فروش کالاها</h3></div></div><div id="topProducts" class="product-rankings"><p class="empty">هنوز اطلاعاتی بارگذاری نشده است.</p></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">پیشنهادها</span><h3>پیشنهادها</h3></div><span class="heading-icon">✦</span></div><div id="recommendations" class="recommendations"><p class="empty">پس از بارگذاری اطلاعات، پیشنهادها نمایش داده می‌شوند.</p></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">عملکرد فروش</span><h3>فروش کالاها</h3></div></div><div id="topProducts" class="product-rankings"><p class="empty">هنوز اطلاعاتی بارگذاری نشده است.</p></div></section>
         </div>
 
-        <section class="panel content-panel trend-panel" style="margin-bottom:18px"><div class="panel-heading"><div><span class="eyebrow">SALES TREND</span><h3>روند فروش سالانه و ماهانه</h3></div><span class="heading-icon">↗</span></div><div class="trend-controls"><label for="trendView">نوع نمودار<select id="trendView"><option value="year">سالانه؛ مقایسه ماه‌ها</option><option value="month">ماهانه؛ فروش روزانه</option></select></label><label for="trendYear">سال شمسی<select id="trendYear"></select></label><label id="trendMonthField" for="trendMonth" hidden>ماه شمسی<select id="trendMonth"></select></label></div><div id="trendPanel"><p class="empty">پس از اتصال داده‌ها و تکمیل ۳۰ روز سابقه، نمودار فروش نمایش داده می‌شود.</p></div></section>
+        <section class="panel content-panel trend-panel" style="margin-bottom:18px"><div class="panel-heading"><div><span class="eyebrow">روند فروش</span><h3>روند فروش</h3></div><span class="heading-icon">↗</span></div><div class="trend-controls"><label for="trendView">نوع نمودار<select id="trendView"><option value="year">سالانه؛ مقایسه ماه‌ها</option><option value="month">ماهانه؛ فروش روزانه</option></select></label><label for="trendYear">سال<select id="trendYear"></select></label><label id="trendMonthField" for="trendMonth" hidden>ماه<select id="trendMonth"></select></label></div><div id="trendPanel"><p class="empty">نمودار فروش پس از ثبت ۳۰ روز سابقه نمایش داده می‌شود.</p></div></section>
 
-        <section class="panel content-panel weekday-panel" style="margin-bottom:18px"><div class="panel-heading"><div><span class="eyebrow">WEEKDAY PERFORMANCE</span><h3>کدام روز هفته فروش بیشتری دارد؟</h3></div><span class="heading-icon">۷</span></div><div id="weekdayPanel"><p class="empty">پس از فعال‌شدن تحلیل، فروش روزهای هفته مقایسه می‌شود.</p></div></section>
+        <section class="panel content-panel weekday-panel" style="margin-bottom:18px"><div class="panel-heading"><div><span class="eyebrow">فروش روزهای هفته</span><h3>کدام روز هفته فروش بیشتری دارد؟</h3></div><span class="heading-icon">۷</span></div><div id="weekdayPanel"><p class="empty">فروش روزهای هفته اینجا مقایسه می‌شود.</p></div></section>
 
-        <section class="panel table-panel"><div class="panel-heading"><div><span class="eyebrow">INVENTORY WATCH</span><h3>وضعیت کالاها</h3></div><span id="inventoryCount" class="count-chip">۰ کالا</span></div><div class="table-wrap"><table><thead><tr><th>نام کالا</th><th>موجودی</th><th>فروش ثبت‌شده</th><th>سود واحد</th><th>وضعیت</th></tr></thead><tbody id="inventoryRows"><tr><td colspan="5" class="empty">ابتدا پوشهٔ دیتابیس را متصل کن.</td></tr></tbody></table></div></section>
+        <section class="panel table-panel"><div class="panel-heading"><div><span class="eyebrow">وضعیت موجودی</span><h3>وضعیت کالاها</h3></div><span id="inventoryCount" class="count-chip">۰ کالا</span></div><div class="table-wrap"><table><thead><tr><th>نام کالا</th><th>موجودی</th><th>فروش ثبت‌شده</th><th>سود واحد</th><th>وضعیت</th></tr></thead><tbody id="inventoryRows"><tr><td colspan="5" class="empty">اطلاعات فروشگاه بارگذاری نشده است.</td></tr></tbody></table></div></section>
 
         <section class="panel content-panel period-panel">
-          <div class="panel-heading"><div><span class="eyebrow">TIME MACHINE</span><h3>گزارش روزانه و ماهانه</h3></div><span class="heading-icon">◷</span></div>
-          <div class="filter-row"><label>از تاریخ شمسی <input id="dateFrom" type="text" inputmode="numeric" placeholder="انتخاب تاریخ شمسی" aria-label="از تاریخ شمسی؛ برای باز کردن تقویم لمس کن" autocomplete="off" readonly></label><label>تا تاریخ شمسی <input id="dateTo" type="text" inputmode="numeric" placeholder="انتخاب تاریخ شمسی" aria-label="تا تاریخ شمسی؛ برای باز کردن تقویم لمس کن" autocomplete="off" readonly></label><label>گروه‌بندی گزارش <select id="periodMode"><option value="day">روزانه</option><option value="month" selected>ماهانه</option></select></label><button id="applyPeriod" class="btn btn-primary" type="button">اعمال بازه</button><button id="clearPeriod" class="btn btn-secondary" type="button">کل سابقه</button></div>
-          <div id="periodSummary" class="tool-grid"><p class="empty">پس از اتصال پوشه، گزارش زمانی اینجا نمایش داده می‌شود.</p></div>
+          <div class="panel-heading"><div><span class="eyebrow">گزارش فروش</span><h3>گزارش فروش در بازه انتخابی</h3></div><span class="heading-icon">◷</span></div>
+          <div class="filter-row"><label>از تاریخ <input id="dateFrom" type="text" inputmode="numeric" placeholder="انتخاب تاریخ" aria-label="از تاریخ؛ برای باز کردن تقویم لمس کن" autocomplete="off" readonly></label><label>تا تاریخ <input id="dateTo" type="text" inputmode="numeric" placeholder="انتخاب تاریخ" aria-label="تا تاریخ؛ برای باز کردن تقویم لمس کن" autocomplete="off" readonly></label><label>نمایش بر اساس <select id="periodMode"><option value="day">روزانه</option><option value="month" selected>ماهانه</option></select></label><button id="applyPeriod" class="btn btn-primary" type="button">اعمال بازه</button><button id="clearPeriod" class="btn btn-secondary" type="button">کل سابقه</button></div>
+          <div id="periodSummary" class="tool-grid"><p class="empty">گزارش این بازه اینجا نمایش داده می‌شود.</p></div>
           <div id="periodTable" class="table-wrap"></div>
         </section>
         <section class="content-grid tools-grid">
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 01</span><h3>روزهای پرفروش</h3></div></div><div id="bestDays" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 02</span><h3>بهترین ماه‌ها</h3></div></div><div id="bestMonths" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 03</span><h3>سودآورترین کالاها</h3></div></div><div id="profitLeaders" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 04</span><h3>بیشترین تعداد فروش</h3></div></div><div id="unitLeaders" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 05</span><h3>کالاهای بدون فروش</h3></div></div><div id="noSalesTools" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 06</span><h3>هشدار موجودی کم</h3></div></div><div id="lowStockTools" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 07</span><h3>سرمایه خوابیده در انبار</h3></div></div><div id="deadStockTools" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 08</span><h3>شاخص‌های عملکرد</h3></div></div><div id="kpiTools" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 09</span><h3>فهرست پیشنهادی خرید</h3></div></div><div id="reorderTools" class="tool-list"></div></section>
-          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">MANAGER TOOL 10</span><h3>مقایسه با دورهٔ قبل</h3></div></div><div id="compareTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">گزارش فروش</span><h3>روزهای پرفروش</h3></div></div><div id="bestDays" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">گزارش فروش</span><h3>بهترین ماه‌ها</h3></div></div><div id="bestMonths" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">گزارش کالاها</span><h3>سودآورترین کالاها</h3></div></div><div id="profitLeaders" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">گزارش کالاها</span><h3>بیشترین تعداد فروش</h3></div></div><div id="unitLeaders" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">گزارش کالاها</span><h3>کالاهای بدون فروش</h3></div></div><div id="noSalesTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">وضعیت موجودی</span><h3>هشدار موجودی کم</h3></div></div><div id="lowStockTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">وضعیت موجودی</span><h3>سرمایه خوابیده در انبار</h3></div></div><div id="deadStockTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">شاخص‌ها</span><h3>شاخص‌های عملکرد</h3></div></div><div id="kpiTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">خرید کالا</span><h3>فهرست پیشنهادی خرید</h3></div></div><div id="reorderTools" class="tool-list"></div></section>
+          <section class="panel content-panel"><div class="panel-heading"><div><span class="eyebrow">مقایسه فروش</span><h3>مقایسه با دورهٔ قبل</h3></div></div><div id="compareTools" class="tool-list"></div></section>
         </section>
       </section>
 
-      <section id="welcomeState" class="welcome-state"><div class="welcome-icon">▤</div><h2>اطلاعات فروشگاهت را بررسی کن</h2><p>برای شروع، دیتابیس فروشگاه را از طریق دکمه اتصال برقرار کن. اطلاعات فقط از پوشهٔ دیتابیس فروشگاه خوانده می‌شود و گزارش‌ها در همین مرورگر ساخته می‌شوند.</p><div class="file-pills"><span>اطلاعات کالاها</span><span>فاکتورهای فروش</span><span>گردش انبار</span><span>تنظیمات فروشگاه</span></div></section>
-      <footer><span>Mahshap · Store Management</span><span>اطلاعات فقط خوانده می‌شوند و به سرور ارسال نمی‌شوند.</span></footer>
+      <section id="welcomeState" class="welcome-state"><div class="welcome-icon">▤</div><h2>اطلاعات فروشگاهت را بررسی کن</h2><p>برای شروع، اطلاعات فروشگاه را بارگذاری کن. گزارش‌ها بر اساس اطلاعات فروشگاه نمایش داده می‌شوند.</p><div class="file-pills"><span>اطلاعات کالاها</span><span>فاکتورهای فروش</span><span>گردش انبار</span><span>تنظیمات فروشگاه</span></div></section>
+      <footer><span>Mahshap</span></footer>
     </main>
   </div>
     <div class="support-float" aria-label="تماس با پشتیبان">

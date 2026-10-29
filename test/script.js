@@ -14,7 +14,7 @@
   // Use local calendar dates for real invoice timestamps; keep the UTC helper for calendar-grid iteration.
   const jalaliLocalParts = (d) => { const p = Object.fromEntries(jalaliLocalFormatter.formatToParts(d).map(x=>[x.type,x.value])); return {year:Number(p.year),month:Number(p.month),day:Number(p.day)}; };
   const jalaliLabel = (d, monthOnly=false) => { if(!d || Number.isNaN(d.getTime())) return 'نامشخص'; const p=jalaliLocalParts(d); return toFaDigits(monthOnly ? `${p.year}/${String(p.month).padStart(2,'0')}` : `${p.year}/${String(p.month).padStart(2,'0')}/${String(p.day).padStart(2,'0')}`); };
-  const jalaliInputToDate = (value, end=false) => { if(!value) return null; const m=faDigits(value).trim().match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/); if(!m) throw new Error('تاریخ را به شکل شمسی سال/ماه/روز وارد کن؛ نمونه: ۱۴۰۵/۰۷/۳۰'); const jy=+m[1], jm=+m[2], jd=+m[3]; if(jm<1||jm>12||jd<1||jd>31) throw new Error('تاریخ شمسی واردشده معتبر نیست.'); const start=Date.UTC(jy+621,0,1), stop=Date.UTC(jy+623,0,1); for(let t=start;t<stop;t+=86400000){const d=new Date(t), q=jalaliParts(d); if(q.year===jy&&q.month===jm&&q.day===jd) return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),end?23:0,end?59:0,end?59:0,end?999:0);} throw new Error('این تاریخ شمسی وجود ندارد؛ روز و ماه را بررسی کن.'); };
+  const jalaliInputToDate = (value, end=false) => { if(!value) return null; const m=faDigits(value).trim().match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/); if(!m) throw new Error('تاریخ را به شکل سال/ماه/روز وارد کن؛ نمونه: ۱۴۰۵/۰۷/۳۰'); const jy=+m[1], jm=+m[2], jd=+m[3]; if(jm<1||jm>12||jd<1||jd>31) throw new Error('تاریخ واردشده معتبر نیست.'); const start=Date.UTC(jy+621,0,1), stop=Date.UTC(jy+623,0,1); for(let t=start;t<stop;t+=86400000){const d=new Date(t), q=jalaliParts(d); if(q.year===jy&&q.month===jm&&q.day===jd) return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),end?23:0,end?59:0,end?59:0,end?999:0);} throw new Error('این تاریخ وجود ندارد؛ روز و ماه را بررسی کن.'); };
   const dateLabel = (value) => { const d = dateOf(value); return d ? jalaliLabel(d) : 'نامشخص'; };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const setStatus = (message, kind = '') => { const el = $('statusMessage'); el.textContent = message; el.className = `status-message ${kind}`.trim(); };
@@ -42,18 +42,18 @@
     const byName = new Map();
     for (const file of fileList) byName.set(file.name, file);
     const missing = FILES.filter(name => !byName.has(name));
-    if (missing.length) throw new Error(`این فایل‌ها در پوشهٔ انتخاب‌شده پیدا نشدند: ${missing.join('، ')}`);
+    if (missing.length) throw new Error(`این فایل‌ها پیدا نشدند: ${missing.join('، ')}`);
     return Promise.all(FILES.map(async name => [name, parseJSON(await byName.get(name).text(), name)])).then(entries => Object.fromEntries(entries));
   }
   function applyData(data, shouldPersist = true) {
     state.loaded = true;
-    if (shouldPersist) { try { sessionStorage.setItem('mahshapAnalyticsData', JSON.stringify(data)); } catch (_) { /* storage may be unavailable or full; current session still works */ } }
+    if (shouldPersist) { try { localStorage.setItem('mahshapAnalyticsData', JSON.stringify(data)); } catch (_) { /* cache may be unavailable or full; current view still works */ } }
     state.products = normalizeArray(data['biza-products.json'], 'biza-products.json');
     state.invoices = normalizeArray(data['biza-invoices.json'], 'biza-invoices.json');
     state.movements = normalizeArray(data['biza-stock-movements.json'], 'biza-stock-movements.json');
     state.settings = data['biza-settings.json'] && typeof data['biza-settings.json'] === 'object' ? data['biza-settings.json'] : {};
-    if (!state.products.length && !state.invoices.length) setStatus('پوشه وصل شد، اما فعلاً کالا یا فاکتوری در فایل‌ها نیست.', 'success');
-    else setStatus(`پوشه متصل شد؛ ${money(state.products.length)} کالا و ${money(state.invoices.length)} فاکتور خوانده شد.`, 'success');
+    if (!state.products.length && !state.invoices.length) setStatus('هنوز کالا یا فاکتوری ثبت نشده است.', 'success');
+    else setStatus(`${money(state.products.length)} کالا و ${money(state.invoices.length)} فاکتور بارگذاری شد.`, 'success');
     $('refreshBtn').disabled = !state.directoryHandle;
     renderDashboard();
   }
@@ -87,7 +87,7 @@
       permission = await handle.requestPermission({ mode: 'read' });
     }
     if (permission !== 'granted') return false;
-    setStatus('در حال خواندن دیتابیس فروشگاه…');
+    setStatus('در حال خواندن اطلاعات فروشگاه…');
     const data = await readFromDirectoryHandle(handle);
     state.directoryHandle = handle;
     applyData(data);
@@ -108,7 +108,7 @@
             const permission = await handle.requestPermission({ mode: 'read' });
             if (permission !== 'granted') throw new Error('اجازهٔ خواندن پوشه داده نشد.');
           }
-          setStatus('در حال خواندن دیتابیس فروشگاه…');
+          setStatus('در حال خواندن اطلاعات فروشگاه…');
           const data = await readFromDirectoryHandle(handle);
           state.directoryHandle = handle;
           applyData(data);
@@ -121,14 +121,14 @@
           }
         }
       }
-      setStatus('این مرورگر اتصال مستقیم پوشه را پشتیبانی نمی‌کند؛ فایل‌های دیتابیس را با انتخاب‌گر فایل انتخاب کن.');
+      setStatus('این مرورگر انتخاب مستقیم پوشه را پشتیبانی نمی‌کند؛ فایل‌های اطلاعات فروشگاه را انتخاب کن.');
       $('folderInput').click();
     } catch (err) {
-      setStatus(err.message || 'اتصال دیتابیس فروشگاه ناموفق بود.', 'error');
+      setStatus(err.message || 'بارگذاری اطلاعات فروشگاه انجام نشد.', 'error');
     }
   }
   async function refreshData() {
-    if (!state.directoryHandle) { setStatus('برای تازه‌سازی، چهار فایل JSON دیتابیس را دوباره انتخاب کن.'); $('folderInput').click(); return; }
+    if (!state.directoryHandle) { setStatus('برای به‌روزرسانی، پوشه اطلاعات فروشگاه را انتخاب کن.'); $('folderInput').click(); return; }
     try { setStatus('در حال به‌روزرسانی…'); const data = await readFromDirectoryHandle(state.directoryHandle); applyData(data); }
     catch (err) { setStatus(err.message || 'خواندن دوبارهٔ فایل‌ها ناموفق بود.', 'error'); }
   }
@@ -180,8 +180,8 @@
       $('lockedProductCount').textContent = `کالاها: ${money(state.products.length)}`;
       $('lockedInvoiceCount').textContent = `فاکتورها: ${money(a.validInvoices.length)}`;
       $('analysisLockedText').textContent = a.validInvoices.length
-        ? `دیتابیس متصل است، اما سابقهٔ فروش موجود حدود ${money(a.historyDays)} روز است. برای نمایش همهٔ گزارش‌ها و پیشنهادهای هوشمند، فاکتورهای ثبت‌شده باید دست‌کم ۳۰ روز را پوشش دهند.`
-        : 'دیتابیس متصل است، اما هنوز فاکتور فروش معتبری وجود ندارد. پس از ثبت فروش و ایجاد دست‌کم ۳۰ روز سابقه، همهٔ گزارش‌ها و پیشنهادهای هوشمند فعال می‌شوند.';
+        ? `سابقه فروش فعلی حدود ${money(a.historyDays)} روز است. برای نمایش همه گزارش‌ها، فروش باید دست‌کم ۳۰ روز سابقه داشته باشد.`
+        : 'هنوز فاکتور فروش معتبری ثبت نشده است. پس از ثبت فروش در دست‌کم ۳۰ روز، گزارش‌ها نمایش داده می‌شوند.';
       return;
     }
     $('totalSales').textContent = money(a.totalSales);
@@ -313,7 +313,7 @@
     }
     const max = Math.max(1,...values.map(value => value.sales));
     const className = view === 'month' ? 'trend-bars trend-bars-month' : 'trend-bars';
-    panel.innerHTML = `<div class="${className}">${values.map(value=>`<div class="trend-bar-wrap"><div class="trend-bar" title="${esc(value.label)} · ${money(value.sales)} تومان" style="height:${Math.max(2,value.sales/max*82)}%"></div><span class="trend-label">${esc(value.label)}</span></div>`).join('')}</div><p class="trend-caption">${view==='year' ? `مجموع فروش هر ماه شمسی در سال ${toFaDigits(selectedYear)}؛ برای ماهانه‌دیدن، نوع نمودار را تغییر بده.` : `مجموع فروش هر روز ${monthNames[selectedMonth-1]} ${toFaDigits(selectedYear)}.`}</p>`;
+    panel.innerHTML = `<div class="${className}">${values.map(value=>`<div class="trend-bar-wrap"><div class="trend-bar" title="${esc(value.label)} · ${money(value.sales)} تومان" style="height:${Math.max(2,value.sales/max*82)}%"></div><span class="trend-label">${esc(value.label)}</span></div>`).join('')}</div><p class="trend-caption">${view==='year' ? `مجموع فروش هر ماه در سال ${toFaDigits(selectedYear)}؛ برای دیدن فروش روزانه، نوع نمودار را تغییر بده.` : `مجموع فروش روزانه در ${monthNames[selectedMonth-1]} ${toFaDigits(selectedYear)}.`}</p>`;
   }
 
   function renderWeekdaySales(a) {
@@ -425,45 +425,64 @@
   $('refreshBtn').addEventListener('click', refreshData);
   $('folderInput').addEventListener('change', async (event) => {
     const files = event.target.files; if (!files || !files.length) return;
-    try { setStatus('در حال خواندن فایل‌های انتخاب‌شده…'); const data = await readFromInputFiles(files); state.directoryHandle = null; $('refreshBtn').disabled = true; applyData(data); setStatus('فایل‌ها خوانده شدند. برای تازه‌سازی در این مرورگر، دوباره پوشه را انتخاب کن.', 'success'); }
+    try { setStatus('در حال خواندن فایل‌های انتخاب‌شده…'); const data = await readFromInputFiles(files); state.directoryHandle = null; $('refreshBtn').disabled = true; applyData(data); setStatus('اطلاعات بارگذاری شد.', 'success'); }
     catch (err) { setStatus(err.message || 'خواندن فایل‌ها ناموفق بود.', 'error'); }
     event.target.value = '';
   });
   $('applyPeriod').addEventListener('click', () => { try { if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); } catch(e) { setStatus(e.message || 'تاریخ واردشده معتبر نیست.','error'); } });
   $('clearPeriod').addEventListener('click', () => { $('dateFrom').value=''; $('dateTo').value=''; $('periodMode').value='month'; if (state.products.length || state.invoices.length) renderManagerTools(getAnalytics()); });
   async function restoreInitialData() {
-    let restoredSession = false;
-    // A session snapshot is only a fallback; prefer the current files in the shared store folder.
+    let restoredCache = false;
+
+    // Prefer the main app's newest local copy, so a refresh does not ask for the folder again.
     try {
-      const saved = sessionStorage.getItem('mahshapAnalyticsData');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && FILES.every(name => Object.prototype.hasOwnProperty.call(parsed, name))) {
-          applyData(parsed, false);
-          setStatus('اطلاعات همین نشست بازیابی شد؛ برای آخرین تغییرات دیتابیس را تازه کن.', 'success');
-          restoredSession = true;
-        }
+      const cachedStore = JSON.parse(localStorage.getItem('biza_lite_db_v1') || 'null');
+      if (cachedStore && typeof cachedStore === 'object') {
+        applyData({
+          'biza-products.json': Array.isArray(cachedStore.products) ? cachedStore.products : [],
+          'biza-invoices.json': Array.isArray(cachedStore.invoices) ? cachedStore.invoices : [],
+          'biza-stock-movements.json': Array.isArray(cachedStore.movements) ? cachedStore.movements : [],
+          'biza-settings.json': cachedStore.settings && typeof cachedStore.settings === 'object' ? cachedStore.settings : {}
+        }, false);
+        restoredCache = true;
+        setStatus('اطلاعات ذخیره‌شده فروشگاه نمایش داده می‌شود.');
       }
-    } catch (_) { /* ignore stale or unavailable session cache */ }
+    } catch (_) { /* ignore unavailable store cache */ }
+
+    if (!restoredCache) {
+      try {
+        const saved = localStorage.getItem('mahshapAnalyticsData');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && FILES.every(name => Object.prototype.hasOwnProperty.call(parsed, name))) {
+            applyData(parsed, false);
+            restoredCache = true;
+            setStatus('گزارش‌ها با آخرین اطلاعات ذخیره‌شده نمایش داده می‌شوند.');
+          }
+        }
+      } catch (_) { /* ignore stale or unavailable local cache */ }
+    }
 
     try {
       const handle = await getSharedDirectoryHandle();
       if (handle) {
+        // Do not trigger a permission prompt on page load. Browsers require a user action
+        // if the saved permission was revoked or has expired.
         const permission = await handle.queryPermission({ mode: 'read' });
         if (permission === 'granted') {
-          setStatus('در حال اتصال خودکار به دیتابیس فروشگاه…');
+          setStatus('در حال به‌روزرسانی گزارش‌ها…');
           const data = await readFromDirectoryHandle(handle);
           state.directoryHandle = handle;
-          applyData(data, false);
-          setStatus('دیتابیس مشترک فروشگاه Mahshap متصل شد و گزارش‌ها به‌روز هستند.', 'success');
+          applyData(data);
+          setStatus('گزارش‌ها به‌روز شدند.', 'success');
           return;
         }
-        if (!restoredSession) setStatus('دیتابیس فروشگاه شناسایی شد؛ برای تأیید دسترسی، دکمهٔ اتصال را بزن.');
-      } else if (!restoredSession) {
-        setStatus('برای شروع، دیتابیس فروشگاه را از دکمهٔ اتصال برقرار کن.');
+        if (!restoredCache) setStatus('برای نمایش گزارش‌ها، اطلاعات فروشگاه را بارگذاری کن.');
+      } else if (!restoredCache) {
+        setStatus('برای شروع، اطلاعات فروشگاه را بارگذاری کن.');
       }
-    } catch (err) {
-      if (!restoredSession) setStatus(err.message || 'اتصال خودکار دیتابیس انجام نشد؛ دکمهٔ اتصال را بزن.');
+    } catch (_) {
+      if (!restoredCache) setStatus('اطلاعات فروشگاه هنوز در دسترس نیست.');
     }
   }
   restoreInitialData();
