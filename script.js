@@ -247,6 +247,10 @@
   let scannerUnlockTimer = null;
   let scannerScriptPromise = null;
   let scannerSaleOrder = [];
+  let scannerCameraTrack = null;
+  let scannerZoomTimer = null;
+  let scannerLastDecodeAt = 0;
+  let scannerCurrentZoom = 1;
 
   function loadScannerLibrary() {
     if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) return Promise.resolve();
@@ -323,12 +327,13 @@
       const ZX = window.ZXingBrowser;
       const hints = new Map();
       if (ZX.DecodeHintType && ZX.DecodeHintType.TRY_HARDER) hints.set(ZX.DecodeHintType.TRY_HARDER, true);
+      if (ZX.DecodeHintType && ZX.DecodeHintType.ALSO_INVERTED) hints.set(ZX.DecodeHintType.ALSO_INVERTED, true);
       if (ZX.DecodeHintType && ZX.DecodeHintType.POSSIBLE_FORMATS && ZX.BarcodeFormat) {
-        const formats = ["EAN_13","EAN_8","UPC_A","UPC_E","CODE_128","CODE_39","ITF","CODABAR","QR_CODE"]
+        const formats = ["EAN_13","EAN_8","UPC_A","UPC_E","UPC_EAN_EXTENSION","CODE_128","CODE_39","ITF","CODABAR","RSS_14","RSS_EXPANDED","QR_CODE","DATA_MATRIX","PDF_417","AZTEC"]
           .map(name => ZX.BarcodeFormat[name]).filter(Boolean);
         if (formats.length) hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, formats);
       }
-      scannerReader = new Reader(hints.size ? hints : undefined, { delayBetweenScanAttempts: 60, delayBetweenScanSuccess: 180 });
+      scannerReader = new Reader(hints.size ? hints : undefined, { delayBetweenScanAttempts: 45, delayBetweenScanSuccess: 120 });
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter(d => d.kind === "videoinput");
       let deviceId;
@@ -338,9 +343,11 @@
         deviceId = rear ? rear.deviceId : (cameras[cameras.length - 1] && cameras[cameras.length - 1].deviceId);
       }
       scannerActive = true;
+      scannerLastDecodeAt = Date.now();
+      scannerCurrentZoom = 1;
       const constraints = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: scannerFacing };
       scannerControls = await scannerReader.decodeFromConstraints(
-        { video: { ...constraints, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 30 }, focusMode: "continuous" }, audio: false },
+        { video: { ...constraints, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 60 }, focusMode: "continuous" }, audio: false },
         $("scannerVideo"),
         (result, error) => {
           if (result) {
@@ -356,8 +363,34 @@
           }
         }
       );
+      const video = $("scannerVideo");
+      scannerCameraTrack = video && video.srcObject && video.srcObject.getVideoTracks ? video.srcObject.getVideoTracks()[0] : null;
+      // Enable continuous focus/exposure where the phone camera supports them.
+      if (scannerCameraTrack && scannerCameraTrack.getCapabilities) {
+        try {
+          const caps = scannerCameraTrack.getCapabilities();
+          const advanced = {};
+          if (caps.focusMode && caps.focusMode.includes("continuous")) advanced.focusMode = "continuous";
+          if (caps.exposureMode && caps.exposureMode.includes("continuous")) advanced.exposureMode = "continuous";
+          if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes("continuous")) advanced.whiteBalanceMode = "continuous";
+          if (Object.keys(advanced).length) await scannerCameraTrack.applyConstraints({ advanced: [advanced] });
+        } catch (_) {}
+        // If a small barcode is not detected, gently zoom in when optical/digital camera zoom exists.
+        const caps = scannerCameraTrack.getCapabilities ? scannerCameraTrack.getCapabilities() : {};
+        if (caps.zoom && Number(caps.zoom.max) > Number(caps.zoom.min || 1)) {
+          if (scannerZoomTimer) clearInterval(scannerZoomTimer);
+          scannerZoomTimer = setInterval(async () => {
+            if (!scannerActive || !scannerCameraTrack || Date.now() - scannerLastDecodeAt < 1700) return;
+            const minZoom = Number(caps.zoom.min || 1);
+            const maxZoom = Math.min(Number(caps.zoom.max), Math.max(minZoom, 3));
+            if (scannerCurrentZoom >= maxZoom) return;
+            scannerCurrentZoom = Math.min(maxZoom, scannerCurrentZoom + 0.5);
+            try { await scannerCameraTrack.applyConstraints({ advanced: [{ zoom: scannerCurrentZoom }] }); } catch (_) {}
+          }, 900);
+        }
+      }
       setScannerLoading(false);
-      scannerStatus(cameras.length > 1 ? "دوربین روشن است؛ بارکد را داخل کادر بگیر." : "دوربین روشن است؛ بارکد را داخل کادر بگیر.");
+      scannerStatus("دوربین روشن است؛ بارکد را داخل کادر بگیر.");
     } catch (err) {
       scannerActive = false;
       setScannerLoading(true, /NotAllowedError|Permission/i.test(String(err))
@@ -373,7 +406,13 @@
     const value = digits(String(rawValue)).trim();
     if (!value) return;
     const now = Date.now();
+    scannerLastDecodeAt = now;
     scannerLastSeenAt = now;
+    // Return to a wider view after a successful read so the next barcode is easy to present.
+    if (scannerCameraTrack && scannerCurrentZoom > 1) {
+      scannerCurrentZoom = 1;
+      try { scannerCameraTrack.applyConstraints({ advanced: [{ zoom: 1 }] }).catch(() => {}); } catch (_) {}
+    }
     // A barcode stays locked while it remains in view, preventing repeated additions.
     if (scannerUnlockTimer) clearTimeout(scannerUnlockTimer);
     scannerUnlockTimer = setTimeout(() => { scannerLastValue = ""; scannerUnlockTimer = null; }, 750);
@@ -462,6 +501,10 @@
     scannerLastValue = "";
     try { if (scannerControls && typeof scannerControls.stop === "function") scannerControls.stop(); } catch {}
     scannerControls = null;
+    if (scannerZoomTimer) clearInterval(scannerZoomTimer);
+    scannerZoomTimer = null;
+    scannerCameraTrack = null;
+    scannerCurrentZoom = 1;
     try { if (scannerReader && typeof scannerReader.reset === "function") scannerReader.reset(); } catch {}
     scannerReader = null;
     const video = $("scannerVideo");
